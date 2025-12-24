@@ -2,7 +2,7 @@
  * プロキシサーバー経由でGemini APIを呼び出すクライアント
  */
 
-const PROXY_URL = import.meta.env.VITE_PROXY_URL || 'http://localhost:3000';
+const PROXY_URL = import.meta.env.VITE_PROXY_URL || '';
 
 interface GenerateContentParams {
   model: string;
