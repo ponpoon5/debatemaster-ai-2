@@ -114,6 +114,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastPhaseRef = useRef<string>('POSITION'); // Track debate phase changes
+  const lastAnalyzedMessageCountRef = useRef<number>(0); // Track last analyzed message count for caching
 
   const isStudyMode = settings.mode === DebateMode.STUDY;
   const isDrillMode = settings.mode === DebateMode.DRILL;
@@ -148,6 +149,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
     const currentPhase = debateFlowState.currentPhase;
     const phaseChanged = currentPhase !== lastPhaseRef.current;
+    const messageCountChanged = messages.length !== lastAnalyzedMessageCountRef.current;
+
+    // Skip if no changes (use cache)
+    if (!phaseChanged && !messageCountChanged) {
+      console.log('📦 Using cached burden analysis (no changes detected)');
+      return;
+    }
 
     if (phaseChanged) {
       console.log(`🔄 Debate phase changed from ${lastPhaseRef.current} to ${currentPhase}. Re-analyzing burden...`);
@@ -155,6 +163,8 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     } else {
       console.log('🔄 New message detected. Re-analyzing burden...');
     }
+
+    lastAnalyzedMessageCountRef.current = messages.length;
 
     setIsAnalyzingBurden(true);
     analyzeBurdenOfProofStreaming(settings.topic, messages)
