@@ -41,12 +41,15 @@ export default async function handler(req, res) {
 
     // ストリーミング応答
     for await (const chunk of stream) {
-      const chunkText = chunk.text;
+      console.log('📦 Stream chunk:', JSON.stringify(chunk));
+      const chunkText = chunk.text || '';
       const usage = chunk.usageMetadata;
 
-      res.write(
-        `data: ${JSON.stringify({ text: chunkText, usageMetadata: usage })}\n\n`
-      );
+      if (chunkText) {
+        res.write(
+          `data: ${JSON.stringify({ text: chunkText, usageMetadata: usage })}\n\n`
+        );
+      }
     }
 
     res.write('data: [DONE]\n\n');
