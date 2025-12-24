@@ -19,19 +19,14 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    // Google Gemini API v1.34.0 の正しいAPI使用
-    const chat = genAI.chats.create({
-      model,
+    // Google Gemini API v1.30.0 の正しいAPI使用
+    const generativeModel = genAI.getGenerativeModel(model);
+    const chat = generativeModel.startChat({
       history: history || [],
       config,
     });
 
-    // message を ContentUnion 形式に変換
-    const content = typeof message === 'string'
-      ? { role: 'user', parts: [{ text: message }] }
-      : message;
-
-    const stream = await chat.sendMessageStream(content);
+    const stream = await chat.sendMessageStream(message);
 
     // ストリーミング応答
     for await (const chunk of stream) {
