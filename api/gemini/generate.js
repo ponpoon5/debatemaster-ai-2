@@ -20,8 +20,10 @@ export default async function handler(req, res) {
       config,
     });
 
+    const text = result.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
     res.status(200).json({
-      text: result.text,
+      text: text,
       usageMetadata: result.usageMetadata,
     });
   } catch (error) {

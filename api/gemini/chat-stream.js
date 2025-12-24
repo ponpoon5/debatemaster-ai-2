@@ -41,8 +41,8 @@ export default async function handler(req, res) {
 
     // ストリーミング応答
     for await (const chunk of stream) {
-      console.log('📦 Stream chunk:', JSON.stringify(chunk));
-      const chunkText = chunk.text || '';
+      // chunk.candidates[0].content.parts[0].text から取得
+      const chunkText = chunk.candidates?.[0]?.content?.parts?.[0]?.text || '';
       const usage = chunk.usageMetadata;
 
       if (chunkText) {
