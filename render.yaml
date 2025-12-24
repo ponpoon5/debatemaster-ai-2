@@ -1,0 +1,26 @@
+services:
+  # バックエンド（Express プロキシサーバー）
+  - type: web
+    name: debatemaster-api
+    env: node
+    buildCommand: npm install
+    startCommand: npm run server:start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: CLIENT_URL
+        value: https://debatemaster-ai.onrender.com
+
+  # フロントエンド（静的サイト）
+  - type: web
+    name: debatemaster-frontend
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_PROXY_URL
+        value: https://debatemaster-api.onrender.com

@@ -1,0 +1,22 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+build
+coverage
+
+# Config files
+*.config.js
+*.config.ts
+
+# Package files
+package-lock.json
+
+# Environment files
+.env
+.env.local
+
+# IDE
+.vscode
+.idea

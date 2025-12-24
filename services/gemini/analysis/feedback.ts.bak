@@ -1,0 +1,361 @@
+
+import { Type, Schema } from "@google/genai";
+import { ai } from "../client";
+import { MODEL_NAME } from "../../../core/config/gemini.config";
+import { Message, TokenUsage, DebateSettings, DebateMode, FeedbackData } from "../../../core/types";
+import { cleanText } from "../utils/text-cleaner";
+import { extractUsage } from "../utils/token-usage";
+import { getFeedbackPrompt } from "../prompts/analysis/feedback";
+
+export const generateFeedback = async (settings: DebateSettings, history: Message[]): Promise<{ data: FeedbackData, usage: TokenUsage }> => {
+  const transcript = history
+    .map((msg, index) => `[ID:${index}] ${msg.role === 'user' ? 'User' : 'AI'}: ${msg.text}`)
+    .join('\n');
+
+  const topic = settings.topic;
+  const isStoryMode = settings.mode === DebateMode.STORY;
+  const isDemoMode = settings.mode === DebateMode.DEMO;
+
+  const prompt = getFeedbackPrompt(topic, isStoryMode, isDemoMode, transcript);
+
+  // Schema Definitions (Shared components)
+  const toulminElementSchema: Schema = {
+      type: Type.OBJECT,
+      properties: {
+          text: { type: Type.STRING },
+          status: { type: Type.STRING, enum: ["strong", "weak", "missing"] },
+          comment: { type: Type.STRING }
+      },
+      required: ["text", "status", "comment"]
+  };
+
+  const sessionMetricSchema: Schema = {
+      type: Type.OBJECT,
+      properties: {
+          key: { type: Type.STRING },
+          label: { type: Type.STRING },
+          rate: {
+              type: Type.OBJECT,
+              properties: {
+                  numerator: { type: Type.INTEGER },
+                  denominator: { type: Type.INTEGER }
+              },
+              required: ["numerator", "denominator"]
+          },
+          score: { type: Type.INTEGER }
+      },
+      required: ["key", "label", "rate", "score"]
+  };
+
+  const metricRubricSchema: Schema = {
+      type: Type.OBJECT,
+      properties: {
+          key: { type: Type.STRING },
+          label: { type: Type.STRING },
+          score: { type: Type.NUMBER },
+          weight: { type: Type.NUMBER },
+          descriptor: { type: Type.STRING }
+      },
+      required: ["key", "label", "score", "weight", "descriptor"]
+  };
+
+  const exemplarItemSchema: Schema = {
+      type: Type.OBJECT,
+      properties: {
+          level: { type: Type.STRING, enum: ["Mastery", "Secure", "Developing", "Error"] },
+          label: { type: Type.STRING },
+          text: { type: Type.STRING },
+          explanation: { type: Type.STRING },
+          score: { type: Type.NUMBER }
+      },
+      required: ["level", "label", "text", "explanation", "score"]
+  };
+
+  const exemplarMetricSetSchema: Schema = {
+      type: Type.OBJECT,
+      properties: {
+          metricKey: { type: Type.STRING },
+          metricLabel: { type: Type.STRING },
+          items: { type: Type.ARRAY, items: exemplarItemSchema }
+      },
+      required: ["metricKey", "metricLabel", "items"]
+  };
+
+  const trainingRecommendationSchema: Schema = {
+      type: Type.OBJECT,
+      properties: {
+          id: { type: Type.STRING },
+          label: { type: Type.STRING },
+          description: { type: Type.STRING },
+          actionType: { type: Type.STRING, enum: ["open_minigame", "open_textbook", "open_thinking_gym", "start_drill", "start_study"] },
+          actionPayload: {
+              type: Type.OBJECT,
+              properties: {
+                  minigameType: { type: Type.STRING },
+                  textbookChapterId: { type: Type.INTEGER },
+                  thinkingFramework: { type: Type.STRING },
+                  drillTopic: { type: Type.STRING },
+                  studyTopic: { type: Type.STRING }
+              }
+          }
+      },
+      required: ["id", "label", "description", "actionType", "actionPayload"]
+  };
+
+  const sbiSchema: Schema = {
+      type: Type.OBJECT,
+      properties: {
+          situation: { type: Type.STRING },
+          behavior: { type: Type.STRING },
+          impact: { type: Type.STRING }
+      },
+      required: ["situation", "behavior", "impact"]
+  };
+
+  const feedbackSchema: Schema = {
+    type: Type.OBJECT,
+    properties: {
+      score: { type: Type.INTEGER },
+      summary: { type: Type.STRING },
+      strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
+      weaknesses: { type: Type.ARRAY, items: { type: Type.STRING } },
+      advice: { type: Type.STRING },
+      metrics: {
+        type: Type.OBJECT,
+        properties: {
+            logic: { type: Type.INTEGER },
+            evidence: { type: Type.INTEGER },
+            rebuttal: { type: Type.INTEGER },
+            persuasion: { type: Type.INTEGER },
+            consistency: { type: Type.INTEGER },
+            constructiveness: { type: Type.INTEGER },
+            objectivity: { type: Type.INTEGER },
+            clarity: { type: Type.INTEGER }
+        },
+        required: ["logic", "evidence", "rebuttal", "persuasion", "consistency", "constructiveness", "objectivity", "clarity"]
+      },
+      detailedReview: {
+        type: Type.ARRAY,
+        items: {
+          type: Type.OBJECT,
+          properties: {
+            messageIndex: { type: Type.INTEGER },
+            score: { type: Type.INTEGER },
+            critique: { type: Type.STRING },
+            sbi: sbiSchema,
+            betterResponse: { type: Type.STRING },
+            fallacy: { type: Type.STRING, nullable: true },
+            fallacyQuote: { type: Type.STRING },
+            fallacyExplanation: { type: Type.STRING }
+          },
+          required: ["messageIndex", "score", "sbi"]
+        }
+      },
+      rubricDetails: { type: Type.ARRAY, items: metricRubricSchema, nullable: true },
+      sessionMetrics: { type: Type.ARRAY, items: sessionMetricSchema, nullable: true },
+      trainingRecommendations: { type: Type.ARRAY, items: trainingRecommendationSchema, nullable: true },
+      
+      exemplars: { type: Type.ARRAY, items: exemplarMetricSetSchema, nullable: true },
+
+      logicAnalysis: {
+          type: Type.ARRAY,
+          items: {
+              type: Type.OBJECT,
+              properties: {
+                  type: { type: Type.STRING },
+                  summary: { type: Type.STRING },
+                  claim: toulminElementSchema,
+                  data: toulminElementSchema,
+                  warrant: toulminElementSchema
+              },
+              required: ["type", "summary", "claim", "data", "warrant"]
+          },
+          nullable: true
+      },
+      rhetoric: {
+          type: Type.OBJECT,
+          properties: {
+              ethos: { type: Type.INTEGER },
+              pathos: { type: Type.INTEGER },
+              logos: { type: Type.INTEGER },
+              affirmationScore: { type: Type.INTEGER },
+              affirmationComment: { type: Type.STRING }
+          },
+          required: ["ethos", "pathos", "logos", "affirmationScore", "affirmationComment"],
+          nullable: true
+      },
+      questioningAnalysis: {
+        type: Type.OBJECT,
+        properties: {
+          stats: {
+            type: Type.OBJECT,
+            properties: {
+              openCount: { type: Type.INTEGER },
+              closedCount: { type: Type.INTEGER },
+              subtleCount: { type: Type.INTEGER },
+              score: { type: Type.INTEGER },
+              advice: { type: Type.STRING }
+            },
+            required: ["openCount", "closedCount", "subtleCount", "score", "advice"]
+          },
+          details: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                messageIndex: { type: Type.INTEGER },
+                questionText: { type: Type.STRING },
+                type: { type: Type.STRING },
+                effectiveness: { type: Type.INTEGER },
+                comment: { type: Type.STRING }
+              },
+              required: ["messageIndex", "questionText", "type", "effectiveness", "comment"]
+            }
+          }
+        },
+        required: ["stats", "details"],
+        nullable: true
+      },
+      facilitation: {
+        type: Type.OBJECT,
+        properties: {
+          understandingScore: { type: Type.INTEGER },
+          organizingScore: { type: Type.INTEGER },
+          consensusScore: { type: Type.INTEGER },
+          feedback: { type: Type.STRING }
+        },
+        required: ["understandingScore", "organizingScore", "consensusScore", "feedback"],
+        nullable: true
+      },
+      storyAnalysis: {
+        type: Type.OBJECT,
+        nullable: true,
+        properties: {
+          decisionScore: { type: Type.INTEGER },
+          consensusScore: { type: Type.INTEGER },
+          outcome: { type: Type.STRING },
+          socialImpact: {
+            type: Type.OBJECT,
+            properties: {
+              economic: { type: Type.STRING },
+              publicSentiment: { type: Type.STRING },
+              ethical: { type: Type.STRING }
+            },
+            required: ["economic", "publicSentiment", "ethical"]
+          },
+          alternativeScenario: { type: Type.STRING }
+        },
+        required: ["decisionScore", "consensusScore", "outcome", "socialImpact", "alternativeScenario"]
+      },
+      demoAnalysis: {
+        type: Type.OBJECT,
+        nullable: true,
+        properties: {
+          summary: { type: Type.STRING },
+          clashAnalysis: {
+            type: Type.OBJECT,
+            properties: {
+              agenda: { type: Type.STRING },
+              pro: {
+                type: Type.OBJECT,
+                properties: { 
+                    claim: { type: Type.STRING }, 
+                    data: { type: Type.STRING },
+                    warrant: { type: Type.STRING }
+                },
+                required: ["claim", "data", "warrant"]
+              },
+              con: {
+                type: Type.OBJECT,
+                properties: { 
+                    counter: { type: Type.STRING }, 
+                    evidence: { type: Type.STRING },
+                    impact: { type: Type.STRING }
+                },
+                required: ["counter", "evidence", "impact"]
+              },
+              synthesis: { type: Type.STRING }
+            },
+            required: ["agenda", "pro", "con", "synthesis"]
+          },
+          highlights: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                technique: { type: Type.STRING },
+                description: { type: Type.STRING },
+                effect: { type: Type.STRING }
+              },
+              required: ["technique", "description", "effect"]
+            }
+          },
+          learningPoints: {
+             type: Type.ARRAY,
+             items: {
+                type: Type.OBJECT,
+                properties: {
+                   point: { type: Type.STRING },
+                   reason: { type: Type.STRING }
+                },
+                required: ["point", "reason"]
+             }
+          }
+        },
+        required: ["summary", "clashAnalysis", "highlights", "learningPoints"]
+      }
+    },
+    required: ["score", "summary", "strengths", "weaknesses", "advice", "metrics", "detailedReview"],
+  };
+
+  try {
+    const response = await ai.models.generateContent({
+      model: MODEL_NAME,
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: feedbackSchema,
+      },
+    });
+
+    const usage = extractUsage(response);
+
+    if (!response.text) {
+      throw new Error("No feedback text generated");
+    }
+
+    try {
+      const cleaned = cleanText(response.text);
+      const data = JSON.parse(cleaned) as FeedbackData;
+      return { data, usage };
+    } catch (parseError) {
+      console.error("JSON Parse Error:", parseError, "Raw text:", response.text);
+      return {
+        data: {
+          score: 0,
+          summary: "分析結果のデータ形式が正しくありませんでした。",
+          strengths: ["データ解析エラー"],
+          weaknesses: ["AI応答のフォーマット不正"],
+          advice: "システムエラーにより正しいフィードバックを表示できませんでした。",
+          metrics: { logic: 0, evidence: 0, rebuttal: 0, persuasion: 0, consistency: 0, constructiveness: 0, objectivity: 0, clarity: 0 },
+          detailedReview: [],
+        },
+        usage
+      };
+    }
+  } catch (error) {
+    console.error("Feedback generation failed:", error);
+    return {
+      data: {
+        score: 0,
+        summary: "フィードバックの生成中に通信エラーが発生しました。",
+        strengths: ["-"],
+        weaknesses: ["-"],
+        advice: "ネットワーク接続またはAPIキーを確認し、再度お試しください。",
+        metrics: { logic: 0, evidence: 0, rebuttal: 0, persuasion: 0, consistency: 0, constructiveness: 0, objectivity: 0, clarity: 0 },
+        detailedReview: [],
+      },
+      usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 }
+    };
+  }
+};
