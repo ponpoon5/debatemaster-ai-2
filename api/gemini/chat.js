@@ -14,14 +14,25 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'model and message are required' });
     }
 
-    // Google Gemini API v1.30.0 の正しいAPI使用
-    const generativeModel = genAI.getGenerativeModel(model);
-    const chat = generativeModel.startChat({
-      history: history || [],
+    // チャット履歴を含むcontentsを構築
+    const contents = [...(history || [])];
+
+    // 最新のメッセージを追加
+    if (typeof message === 'string') {
+      contents.push({
+        role: 'user',
+        parts: [{ text: message }]
+      });
+    } else {
+      contents.push(message);
+    }
+
+    // generateContent APIを使用
+    const result = await genAI.models.generateContent({
+      model,
+      contents,
       config,
     });
-
-    const result = await chat.sendMessage(message);
 
     res.status(200).json({
       text: result.text,
