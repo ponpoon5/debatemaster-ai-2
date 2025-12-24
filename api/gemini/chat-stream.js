@@ -26,7 +26,12 @@ export default async function handler(req, res) {
       config,
     });
 
-    const stream = await chat.sendMessageStream(message);
+    // message を ContentUnion 形式に変換
+    const content = typeof message === 'string'
+      ? { role: 'user', parts: [{ text: message }] }
+      : message;
+
+    const stream = await chat.sendMessageStream(content);
 
     // ストリーミング応答
     for await (const chunk of stream) {

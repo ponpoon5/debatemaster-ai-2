@@ -21,7 +21,12 @@ export default async function handler(req, res) {
       config,
     });
 
-    const result = await chat.sendMessage(message);
+    // message を ContentUnion 形式に変換
+    const content = typeof message === 'string'
+      ? { role: 'user', parts: [{ text: message }] }
+      : message;
+
+    const result = await chat.sendMessage(content);
 
     res.status(200).json({
       text: result.text,
