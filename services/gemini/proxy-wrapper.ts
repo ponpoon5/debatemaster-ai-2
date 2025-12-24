@@ -198,7 +198,33 @@ class AIClientWrapper {
           // フロントエンドで直接Gemini APIを呼び出す（開発環境推奨）
           return {
             sendMessage: async (message: any) => {
-              throw new Error('sendMessage is not supported in proxy mode. Please use direct mode (VITE_GEMINI_API_KEY) for development or implement proxy endpoint for sendMessage.');
+              const response = await fetch(`${PROXY_URL}/api/gemini/chat`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  model: config.model,
+                  history: chatParams.history || [],
+                  message: message.message,
+                  config: chatParams.generationConfig,
+                }),
+              });
+
+              if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Chat request failed');
+              }
+
+              const data = await response.json();
+              return {
+                text: data.text,
+                usageMetadata: data.usageMetadata,
+                response: {
+                  text: () => data.text,
+                  usageMetadata: data.usageMetadata,
+                },
+              };
             },
             sendMessageStream: async (message: any) => {
               const response = await fetch(`${PROXY_URL}/api/gemini/chat-stream`, {
