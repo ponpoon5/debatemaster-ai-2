@@ -19,8 +19,9 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    const generativeModel = genAI.getGenerativeModel(model);
-    const chat = generativeModel.startChat({
+    // Google Gemini API v1.34.0 の正しいAPI使用
+    const chat = genAI.chats.create({
+      model,
       history: history || [],
       config,
     });
