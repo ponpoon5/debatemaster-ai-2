@@ -83,7 +83,7 @@ export const analyzeUtteranceStructure = async (
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: {
         responseMimeType: 'application/json',
         responseSchema: schema,
@@ -207,7 +207,7 @@ export const analyzeUtteranceStructureStreaming = async (
     const { data, usage } = await streamJsonContent<any>(
       {
         model: MODEL_NAME,
-        contents: prompt,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           responseMimeType: 'application/json',
           responseSchema: schema,

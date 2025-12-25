@@ -24,7 +24,7 @@ export const generateFeedback = async (
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: {
         responseMimeType: 'application/json',
         responseSchema: feedbackSchema,
@@ -113,7 +113,7 @@ export const generateFeedbackStreaming = async (
     const result = await streamJsonContent<FeedbackData>(
       {
         model: MODEL_NAME,
-        contents: prompt,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           responseMimeType: 'application/json',
           responseSchema: feedbackSchema,

@@ -48,7 +48,7 @@ export const getDebateAdvice = async (
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: {
         responseMimeType: 'application/json',
         responseSchema: adviceSchema,
@@ -135,7 +135,7 @@ export const getDebateAdviceStreaming = async (
     const { data, usage } = await streamJsonContent<any>(
       {
         model: MODEL_NAME,
-        contents: prompt,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           responseMimeType: 'application/json',
           responseSchema: adviceSchema,

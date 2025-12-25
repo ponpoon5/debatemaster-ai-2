@@ -27,7 +27,7 @@ export const getDebateSummary = async (
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: {
         responseMimeType: 'application/json',
         responseSchema: schema,
@@ -75,7 +75,7 @@ export const getDebateSummaryStreaming = async (
     const { data, usage } = await streamJsonContent<string[]>(
       {
         model: MODEL_NAME,
-        contents: prompt,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           responseMimeType: 'application/json',
           responseSchema: schema,

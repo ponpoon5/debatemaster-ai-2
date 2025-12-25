@@ -52,7 +52,7 @@ ${transcript}
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: {
         responseMimeType: 'application/json',
         responseSchema: burdenAnalysisSchema,
@@ -152,7 +152,7 @@ ${transcript}
     const { data, usage } = await streamJsonContent<BurdenAnalysis>(
       {
         model: MODEL_NAME,
-        contents: prompt,
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           responseMimeType: 'application/json',
           responseSchema: burdenAnalysisSchema,
