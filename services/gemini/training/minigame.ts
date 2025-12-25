@@ -195,7 +195,7 @@ export const generateMiniGameContent = async (
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: { responseMimeType: 'application/json', responseSchema: schema },
     });
     const usage = extractUsage(response);
@@ -308,7 +308,7 @@ export const evaluateMiniGameAnswer = async (
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: { responseMimeType: 'application/json', responseSchema: schema },
     });
     const usage = extractUsage(response);

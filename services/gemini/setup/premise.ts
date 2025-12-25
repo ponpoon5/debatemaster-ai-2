@@ -24,15 +24,31 @@ export const generatePremiseProposal = async (
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [
+        {
+          role: 'user',
+          parts: [{ text: prompt }],
+        },
+      ],
       config: {
         responseMimeType: 'application/json',
         responseSchema: schema,
       },
     });
     const usage = extractUsage(response);
+
+    // プロキシモードでは response.response.text() を使用
+    let textContent = '';
     if (response.text) {
-      const cleaned = cleanText(response.text);
+      textContent = response.text;
+    } else if (response.response?.text) {
+      textContent = typeof response.response.text === 'function'
+        ? response.response.text()
+        : response.response.text;
+    }
+
+    if (textContent) {
+      const cleaned = cleanText(textContent);
       return { data: JSON.parse(cleaned) as PremiseData, usage };
     }
     throw new Error('No text response');

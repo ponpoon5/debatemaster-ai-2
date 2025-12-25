@@ -73,7 +73,7 @@ export const generateAttackPointQuiz = async (
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: { responseMimeType: 'application/json', responseSchema: schema },
     });
     const usage = extractUsage(response);
@@ -142,7 +142,7 @@ export const generateWeighingQuiz = async (): Promise<{
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: { responseMimeType: 'application/json', responseSchema: schema },
     });
     const usage = extractUsage(response);
@@ -208,7 +208,7 @@ export const generateDefinitionQuiz = async (): Promise<{
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: { responseMimeType: 'application/json', responseSchema: schema },
     });
     const usage = extractUsage(response);

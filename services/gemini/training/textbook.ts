@@ -25,7 +25,7 @@ export const generateTextbookProblem = async (
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
     });
     return {
       problem: cleanText(response.text || ''),
@@ -73,7 +73,7 @@ export const evaluateTextbookAnswer = async (
   try {
     const response = await ai.models.generateContent({
       model: MODEL_NAME,
-      contents: prompt,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
       config: {
         responseMimeType: 'application/json',
         responseSchema: schema,
