@@ -194,8 +194,9 @@ class AIClientWrapper {
         },
         startChat: (chatParams: any) => {
           // プロキシモード用のチャットラッパー
-          // 注意: sendMessage（非ストリーミング）は現在プロキシ未対応のため、
-          // フロントエンドで直接Gemini APIを呼び出す（開発環境推奨）
+          // ローカルで会話履歴を蓄積し、各リクエストで送信する
+          let accumulatedHistory = chatParams.history || [];
+
           return {
             sendMessage: async (message: any) => {
               const response = await fetch(`${PROXY_URL}/api/gemini/chat`, {
@@ -205,7 +206,7 @@ class AIClientWrapper {
                 },
                 body: JSON.stringify({
                   model: config.model,
-                  history: chatParams.history || [],
+                  history: accumulatedHistory,
                   message: message.message,
                   config: chatParams.generationConfig,
                 }),
@@ -217,6 +218,14 @@ class AIClientWrapper {
               }
 
               const data = await response.json();
+
+              // 履歴に追加（ユーザーメッセージとAIレスポンス）
+              accumulatedHistory = [
+                ...accumulatedHistory,
+                { role: 'user', parts: [{ text: message.message }] },
+                { role: 'model', parts: [{ text: data.text }] },
+              ];
+
               return {
                 text: data.text,
                 usageMetadata: data.usageMetadata,
@@ -234,7 +243,7 @@ class AIClientWrapper {
                 },
                 body: JSON.stringify({
                   model: config.model,
-                  history: chatParams.history || [],
+                  history: accumulatedHistory,
                   message: message.message,
                   config: chatParams.generationConfig,
                 }),
@@ -251,6 +260,7 @@ class AIClientWrapper {
               const decoder = new TextDecoder();
 
               async function* streamGenerator() {
+                let fullText = '';
                 try {
                   while (true) {
                     const { done, value } = await reader.read();
@@ -262,15 +272,27 @@ class AIClientWrapper {
                     for (const line of lines) {
                       if (line.startsWith('data: ')) {
                         const data = line.slice(6);
-                        if (data === '[DONE]') return;
+                        if (data === '[DONE]') {
+                          // ストリーム完了時に履歴に追加
+                          if (fullText) {
+                            accumulatedHistory = [
+                              ...accumulatedHistory,
+                              { role: 'user', parts: [{ text: message.message }] },
+                              { role: 'model', parts: [{ text: fullText }] },
+                            ];
+                          }
+                          return;
+                        }
 
                         try {
                           const parsed = JSON.parse(data);
                           if (parsed.error) {
                             throw new Error(parsed.message || 'Stream error');
                           }
+                          const chunkText = parsed.text || '';
+                          fullText += chunkText;
                           yield {
-                            text: parsed.text || '',
+                            text: chunkText,
                             usageMetadata: parsed.usageMetadata,
                           };
                         } catch (e) {
@@ -278,6 +300,15 @@ class AIClientWrapper {
                         }
                       }
                     }
+                  }
+
+                  // ストリーム終了時にも履歴に追加（[DONE]がない場合）
+                  if (fullText && !accumulatedHistory.some(h => h.role === 'model' && h.parts[0].text === fullText)) {
+                    accumulatedHistory = [
+                      ...accumulatedHistory,
+                      { role: 'user', parts: [{ text: message.message }] },
+                      { role: 'model', parts: [{ text: fullText }] },
+                    ];
                   }
                 } finally {
                   reader.releaseLock();
