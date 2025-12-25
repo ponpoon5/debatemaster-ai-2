@@ -2,7 +2,8 @@ export const getFeedbackPrompt = (
   topic: string,
   isStoryMode: boolean,
   isDemoMode: boolean,
-  transcript: string
+  transcript: string,
+  isFacilitationMode: boolean = false
 ) => {
   if (isDemoMode) {
     return `
@@ -42,6 +43,7 @@ export const getFeedbackPrompt = (
   return `
     以下の「${topic}」に関する議論の履歴を分析し、ディベートの振り返りデータを作成してください。
     ${isStoryMode ? '※これは「世界観シナリオ・ディベート（Story Mode）」です。ユーザーの意思決定とその結果を重点的に評価してください。' : ''}
+    ${isFacilitationMode ? '※これは「合意形成モード（Facilitation Mode）」です。ユーザーはファシリテーターとして、AさんとBさんの対話を促進しています。AさんとBさんの各発言を個別に評価してください。ユーザー（ファシリテーター）の発言も評価対象に含めてください。' : ''}
 
     【重要：採点根拠のSBIモデル化】
     detailedReview内の各発言に対する採点コメントは、以下のSBIモデルを厳格に適用して客観化してください。

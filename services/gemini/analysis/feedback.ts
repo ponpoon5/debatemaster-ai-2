@@ -18,8 +18,9 @@ export const generateFeedback = async (
   const topic = settings.topic;
   const isStoryMode = settings.mode === DebateMode.STORY;
   const isDemoMode = settings.mode === DebateMode.DEMO;
+  const isFacilitationMode = settings.mode === DebateMode.FACILITATION;
 
-  const prompt = getFeedbackPrompt(topic, isStoryMode, isDemoMode, transcript);
+  const prompt = getFeedbackPrompt(topic, isStoryMode, isDemoMode, transcript, isFacilitationMode);
 
   try {
     const response = await ai.models.generateContent({
@@ -106,8 +107,9 @@ export const generateFeedbackStreaming = async (
   const topic = settings.topic;
   const isStoryMode = settings.mode === DebateMode.STORY;
   const isDemoMode = settings.mode === DebateMode.DEMO;
+  const isFacilitationMode = settings.mode === DebateMode.FACILITATION;
 
-  const prompt = getFeedbackPrompt(topic, isStoryMode, isDemoMode, transcript);
+  const prompt = getFeedbackPrompt(topic, isStoryMode, isDemoMode, transcript, isFacilitationMode);
 
   try {
     const result = await streamJsonContent<FeedbackData>(
