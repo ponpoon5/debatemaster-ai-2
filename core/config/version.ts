@@ -6,12 +6,12 @@
 export const APP_VERSION = {
   major: 3,
   minor: 4,
-  patch: 3,
-  full: '3.4.3',
+  patch: 5,
+  full: '3.4.5',
   name: 'DebateMaster AI',
-  displayName: 'DebateMaster AI vv3.4.3',
-  releaseDate: '2025-12-22',
-  codename: 'Active Inoculation',
+  displayName: 'DebateMaster AI vv3.4.5',
+  releaseDate: '2025-12-25',
+  codename: 'Performance Boost',
 } as const;
 
 export const getVersionString = () => {
