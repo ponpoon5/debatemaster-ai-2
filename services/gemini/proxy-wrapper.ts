@@ -30,9 +30,11 @@ class ProxyAIClient {
     return {
       text: data.text,
       usageMetadata: data.usageMetadata,
+      candidates: data.candidates,
       response: {
         text: () => data.text,
         usageMetadata: data.usageMetadata,
+        candidates: data.candidates,
       },
     };
   }
@@ -175,7 +177,7 @@ class AIClientWrapper {
             body: JSON.stringify({
               model: config.model,
               contents: params.contents,
-              config: params.generationConfig,
+              config: params.generationConfig || params.config,
             }),
           });
 
@@ -186,6 +188,8 @@ class AIClientWrapper {
 
           const data = await response.json();
           return {
+            text: data.text,
+            usageMetadata: data.usageMetadata,
             response: {
               text: () => data.text,
               usageMetadata: data.usageMetadata,

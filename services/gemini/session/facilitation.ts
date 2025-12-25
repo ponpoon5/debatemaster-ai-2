@@ -91,8 +91,18 @@ export const generateFacilitationBoard = async (
 
     const usage = extractUsage(response);
 
+    // プロキシモードでは response.response.text() を使用
+    let textContent = '';
     if (response.text) {
-      const cleaned = cleanText(response.text);
+      textContent = response.text;
+    } else if (response.response?.text) {
+      textContent = typeof response.response.text === 'function'
+        ? response.response.text()
+        : response.response.text;
+    }
+
+    if (textContent) {
+      const cleaned = cleanText(textContent);
       const board = JSON.parse(cleaned) as FacilitationBoardData;
       return { board, usage };
     }
