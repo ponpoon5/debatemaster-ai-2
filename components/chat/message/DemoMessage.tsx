@@ -6,7 +6,7 @@ interface DemoMessageProps {
   data: DemoTurn;
 }
 
-export const DemoMessage: React.FC<DemoMessageProps> = ({ data }) => {
+export const DemoMessage: React.FC<DemoMessageProps> = React.memo(({ data }) => {
   const isPro = data.speaker === 'PRO';
   const align = isPro ? 'flex-row' : 'flex-row-reverse';
   const bubbleColor = isPro
@@ -84,4 +84,4 @@ export const DemoMessage: React.FC<DemoMessageProps> = ({ data }) => {
       </div>
     </div>
   );
-};
+});

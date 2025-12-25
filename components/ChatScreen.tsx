@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Message,
   DebateSettings,
@@ -121,14 +121,18 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const VIRTUAL_SCROLL_THRESHOLD = 50;
   const useVirtualScroll = messages.length >= VIRTUAL_SCROLL_THRESHOLD;
 
-  // Mode flags
-  const isStudyMode = settings.mode === DebateMode.STUDY;
-  const isDrillMode = settings.mode === DebateMode.DRILL;
-  const isFacilitationMode = settings.mode === DebateMode.FACILITATION;
-  const isThinkingGymMode = settings.mode === DebateMode.THINKING_GYM;
-  const isDemoMode = settings.mode === DebateMode.DEMO;
-  const isStandardDebate = settings.mode === DebateMode.DEBATE;
-  const isStoryMode = settings.mode === DebateMode.STORY;
+  // Mode flags (memoized to prevent unnecessary re-renders)
+  const modeFlags = useMemo(() => ({
+    isStudyMode: settings.mode === DebateMode.STUDY,
+    isDrillMode: settings.mode === DebateMode.DRILL,
+    isFacilitationMode: settings.mode === DebateMode.FACILITATION,
+    isThinkingGymMode: settings.mode === DebateMode.THINKING_GYM,
+    isDemoMode: settings.mode === DebateMode.DEMO,
+    isStandardDebate: settings.mode === DebateMode.DEBATE,
+    isStoryMode: settings.mode === DebateMode.STORY,
+  }), [settings.mode]);
+
+  const { isStudyMode, isDrillMode, isFacilitationMode, isThinkingGymMode, isDemoMode, isStandardDebate, isStoryMode } = modeFlags;
 
   // Burden of Proof Tracking
   const { burdenAnalysis, showBurdenTracker, isAnalyzingBurden, toggleBurdenTracker } = useBurdenTracking(
@@ -149,15 +153,19 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     summaryState.isGenerating ||
     boardState.isGenerating;
 
-  const pendingTasks = homeworkTasks.filter(t => t.status === 'pending');
+  // Memoize pendingTasks to avoid re-filtering on every render
+  const pendingTasks = useMemo(
+    () => homeworkTasks.filter(t => t.status === 'pending'),
+    [homeworkTasks]
+  );
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     if (useVirtualScroll) {
       virtualListRef.current?.scrollToBottom();
     } else {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  };
+  }, [useVirtualScroll]);
 
   // コンテナの高さを動的に計算
   useEffect(() => {
@@ -192,28 +200,28 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     return () => clearTimeout(timer);
   }, [messages, isDemoMode, isAutoPlaying, isSending, onSendMessage]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (inputText.trim() && !isSending) {
       onSendMessage(inputText);
       setInputText('');
       resetTools();
     }
-  };
+  }, [inputText, isSending, onSendMessage, setInputText, resetTools]);
 
-  const handleUseStrategy = (template: string) => {
+  const handleUseStrategy = useCallback((template: string) => {
     setInputText(template);
-  };
+  }, [setInputText]);
 
-  const handleModalSend = (text: string) => {
+  const handleModalSend = useCallback((text: string) => {
     onSendMessage(text);
     resetTools();
-  };
+  }, [onSendMessage, resetTools]);
 
-  const handleOpenRebuttalCard = () => {
+  const handleOpenRebuttalCard = useCallback(() => {
     setBuilderMode('rebuttal');
     setShowBuilder(true);
-  };
+  }, [setBuilderMode, setShowBuilder]);
 
   return (
     <div className="flex flex-col h-full bg-slate-50 animate-fade-in relative">

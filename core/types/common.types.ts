@@ -41,4 +41,5 @@ export interface Message {
   role: 'user' | 'model';
   text: string;
   structureAnalysis?: UtteranceStructureScore;
+  isPending?: boolean; // Optimistic UI flag for messages awaiting confirmation
 }

@@ -16,7 +16,7 @@ const PHASES: { id: DebateProgressPhase; label: string; desc: string; icon: any 
   { id: 'CLOSING', label: '結論', desc: '議論をまとめる', icon: CheckCircle2 },
 ];
 
-export const DebatePhaseBar: React.FC<DebatePhaseBarProps> = ({ currentPhase, winCondition }) => {
+export const DebatePhaseBar: React.FC<DebatePhaseBarProps> = React.memo(({ currentPhase, winCondition }) => {
   const currentIndex = PHASES.findIndex(p => p.id === currentPhase);
 
   return (
@@ -92,4 +92,4 @@ export const DebatePhaseBar: React.FC<DebatePhaseBarProps> = ({ currentPhase, wi
       </div>
     </div>
   );
-};
+});

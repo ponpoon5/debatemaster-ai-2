@@ -30,7 +30,7 @@ interface ChatToolbarProps {
  * チャット画面のツールバー
  * 戻るボタン、宿題、要約、立証責任、ホワイトボード、終了ボタンを表示
  */
-export const ChatToolbar: React.FC<ChatToolbarProps> = ({
+export const ChatToolbar: React.FC<ChatToolbarProps> = React.memo(({
   onBackToTop,
   onShowHomework,
   onEndDebate,
@@ -145,4 +145,4 @@ export const ChatToolbar: React.FC<ChatToolbarProps> = ({
       </div>
     </>
   );
-};
+});

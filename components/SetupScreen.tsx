@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   DebateSettings,
   TokenUsage,
@@ -93,7 +93,16 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
   const [showSpecification, setShowSpecification] = useState(false);
   const [expandedHomework, setExpandedHomework] = useState(false);
 
-  const pendingTasks = homeworkTasks.filter(t => t.status === 'pending');
+  // Memoize pendingTasks to avoid re-filtering on every render
+  const pendingTasks = useMemo(
+    () => homeworkTasks.filter(t => t.status === 'pending'),
+    [homeworkTasks]
+  );
+
+  // Memoize modal toggle handlers
+  const handleShowSystemInfo = useCallback(() => setShowSystemInfo(true), []);
+  const handleShowSpecification = useCallback(() => setShowSpecification(true), []);
+  const handleToggleHomework = useCallback(() => setExpandedHomework(prev => !prev), []);
 
   return (
     <div className="h-full w-full overflow-y-auto scrollbar-hide">
@@ -102,8 +111,8 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
           tokenUsage={tokenUsage}
           archivesCount={archives.length}
           onShowHistory={onShowHistory}
-          onShowSystemInfo={() => setShowSystemInfo(true)}
-          onShowSpecification={() => setShowSpecification(true)}
+          onShowSystemInfo={handleShowSystemInfo}
+          onShowSpecification={handleShowSpecification}
         />
 
         <AppHeader activeMode={activeMode} />
@@ -115,7 +124,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
               <div className="bg-white rounded-xl overflow-hidden">
                 <div
                   className="bg-indigo-50 px-4 py-3 flex justify-between items-center cursor-pointer"
-                  onClick={() => setExpandedHomework(!expandedHomework)}
+                  onClick={handleToggleHomework}
                 >
                   <div className="flex items-center gap-2 font-bold text-indigo-800">
                     <ClipboardList size={20} />

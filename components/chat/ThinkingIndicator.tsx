@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bot } from 'lucide-react';
 
-export const ThinkingIndicator: React.FC = () => {
+export const ThinkingIndicator: React.FC = React.memo(() => {
   return (
     <div className="flex items-end gap-3 animate-message-in mb-6 select-none opacity-80">
       <div className="w-8 h-8 rounded-full bg-white border border-slate-200 text-blue-600 flex items-center justify-center shrink-0 shadow-sm animate-pulse">
@@ -16,4 +16,4 @@ export const ThinkingIndicator: React.FC = () => {
       <span className="text-xs text-slate-400 animate-pulse font-medium pb-1">Thinking...</span>
     </div>
   );
-};
+});

@@ -24,10 +24,13 @@ export const useDebateMessaging = ({
     async (text: string) => {
       if (!chatRef.current) return;
 
+      // Optimistic update: 即座にユーザーメッセージをUIに追加
+      const tempUserId = `temp-${Date.now()}`;
       const userMsg: Message = {
-        id: Date.now().toString(),
+        id: tempUserId,
         role: 'user',
         text: text,
+        isPending: true, // 楽観的更新フラグ
       };
 
       setMessages(prev => {
@@ -38,7 +41,7 @@ export const useDebateMessaging = ({
       setIsSending(true);
 
       // AI応答用のプレースホルダーメッセージを作成
-      const aiMsgId = Date.now().toString() + '_ai';
+      const aiMsgId = `${Date.now()}_ai`;
       const aiMsg: Message = {
         id: aiMsgId,
         role: 'model',
@@ -52,6 +55,13 @@ export const useDebateMessaging = ({
         const stream = await chatRef.current.sendMessageStream({ message: text });
         let accumulatedText = '';
         let lastUsage: TokenUsage | undefined;
+
+        // 送信成功時、ユーザーメッセージのpendingフラグを削除
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === tempUserId ? { ...msg, id: Date.now().toString(), isPending: false } : msg
+          )
+        );
 
         for await (const chunk of stream) {
           const chunkText = chunk.text || '';
@@ -74,12 +84,12 @@ export const useDebateMessaging = ({
           updateTokenUsage(lastUsage);
         }
       } catch (error: unknown) {
-        console.error('Chat error:', error);
+        console.error('❌ Chat error:', error);
         const apiError = parseApiError(error);
         handleError(apiError, 'メッセージ送信');
 
-        // エラー時はプレースホルダーメッセージを削除
-        setMessages(prev => prev.filter(msg => msg.id !== aiMsgId));
+        // エラー時はロールバック: 楽観的に追加したメッセージとAIプレースホルダーを削除
+        setMessages(prev => prev.filter(msg => msg.id !== tempUserId && msg.id !== aiMsgId));
       } finally {
         setIsSending(false);
       }

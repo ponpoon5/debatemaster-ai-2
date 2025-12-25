@@ -76,7 +76,7 @@ const getColorForName = (name: string, stakeholders: { name: string }[] = []) =>
   return STORY_COLORS[Math.abs(hash) % STORY_COLORS.length];
 };
 
-export const MultiSpeakerMessage: React.FC<MultiSpeakerMessageProps> = ({
+export const MultiSpeakerMessage: React.FC<MultiSpeakerMessageProps> = React.memo(({
   text,
   role,
   isStoryMode,
@@ -251,4 +251,4 @@ export const MultiSpeakerMessage: React.FC<MultiSpeakerMessageProps> = ({
       </div>
     </div>
   );
-};
+});
