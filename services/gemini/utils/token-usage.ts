@@ -1,13 +1,14 @@
 import { TokenUsage } from '../../../core/types/common.types';
+import type { GeminiResponse, GeminiUsageMetadata } from '../../../core/types/gemini-api.types';
 import { hasValidUsageMetadata } from '../../../core/utils/type-guards';
 
-export const extractUsage = (response: any): TokenUsage => {
+export const extractUsage = (response: GeminiResponse | { usageMetadata?: GeminiUsageMetadata }): TokenUsage => {
   if (!hasValidUsageMetadata(response)) {
     console.warn('usageMetadata is null/undefined in response:', response);
     return { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
   }
 
-  const usage = response.usageMetadata;
+  const usage = response.usageMetadata!;
   return {
     inputTokens: usage.promptTokenCount ?? 0,
     outputTokens: usage.candidatesTokenCount ?? 0,

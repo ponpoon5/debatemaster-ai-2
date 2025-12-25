@@ -4,22 +4,21 @@ import {
   DebateSettings,
   DebateMasterBackup,
   STORAGE_KEY,
-  CURRENT_SCHEMA_VERSION,
   HomeworkTask,
-  WeaknessProfile,
-  SessionMetric,
 } from '../core/types';
-import {
-  createBackupObject,
-  migrateToLatest,
-  downloadBackupFile,
-  validateBackup,
-  mergeBackups,
-} from '../services/persistence/backup';
+import { createBackupObject, migrateToLatest } from '../services/persistence/backup';
+import { updateWeaknessProfile } from './useWeaknessProfile';
+import { useBackupRestore } from './useBackupRestore';
 import { useToast } from './useToast';
 
+/**
+ * ディベートアーカイブとHomeworkタスクを管理するカスタムフック
+ *
+ * LocalStorageへの永続化、Archive・Homeworkの追加/削除、
+ * バックアップ・リストア機能を提供する。
+ */
 export const useDebateArchives = () => {
-  const { showSuccess, showError } = useToast();
+  const { showError } = useToast();
   const [backupState, setBackupState] = useState<DebateMasterBackup>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -28,62 +27,26 @@ export const useDebateArchives = () => {
         return migrateToLatest(parsed);
       }
     } catch (e) {
-      console.error('Failed to load archives from storage', e);
+      console.error('❌ Failed to load archives from storage:', e);
+      showError('保存データの読み込みに失敗しました');
     }
     return createBackupObject([]);
   });
 
+  // LocalStorageへの永続化
   useEffect(() => {
     if (backupState && backupState.schemaVersion) {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(backupState));
       } catch (e) {
-        console.error('Failed to save archives to storage', e);
+        console.error('❌ Failed to save archives to storage:', e);
+        showError('保存データの書き込みに失敗しました');
       }
     }
-  }, [backupState]);
+  }, [backupState, showError]);
 
-  // --- Profile Update Logic ---
-  const updateWeaknessProfile = (
-    currentProfile: WeaknessProfile,
-    newMetrics?: SessionMetric[]
-  ): WeaknessProfile => {
-    if (!newMetrics || newMetrics.length === 0) return currentProfile;
-
-    const updatedMetrics = { ...currentProfile.metrics };
-
-    newMetrics.forEach(m => {
-      const existing = updatedMetrics[m.key] || {
-        key: m.key,
-        label: m.label,
-        description: '',
-        rate: { numerator: 0, denominator: 0 },
-        score: 0,
-        lastUpdated: new Date().toISOString(),
-        sampleSize: 0,
-      };
-
-      // Aggregate: Accumulate numerator and denominator
-      const newNumerator = existing.rate.numerator + m.rate.numerator;
-      const newDenominator = existing.rate.denominator + m.rate.denominator;
-
-      // Recalculate score (simple percentage for now)
-      const newScore = newDenominator > 0 ? Math.round((newNumerator / newDenominator) * 100) : 0;
-
-      updatedMetrics[m.key] = {
-        ...existing,
-        rate: { numerator: newNumerator, denominator: newDenominator },
-        score: newScore,
-        lastUpdated: new Date().toISOString(),
-        sampleSize: newDenominator,
-      };
-    });
-
-    return {
-      lastUpdated: new Date().toISOString(),
-      metrics: updatedMetrics,
-    };
-  };
+  // バックアップ・リストア機能
+  const { exportData, importData } = useBackupRestore(backupState, setBackupState);
 
   // --- Archive Actions ---
 
@@ -148,72 +111,6 @@ export const useDebateArchives = () => {
       ...prev,
       homeworkTasks: prev.homeworkTasks.filter(t => t.id !== taskId),
     }));
-  };
-
-  // --- File Operations ---
-
-  const exportData = () => {
-    downloadBackupFile(backupState);
-  };
-
-  const importData = (file: File): Promise<boolean> => {
-    return new Promise(resolve => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        try {
-          const jsonRaw = e.target?.result as string;
-          const json = JSON.parse(jsonRaw);
-
-          if (validateBackup(json)) {
-            const importedBackup = migrateToLatest(json);
-            const currentCount = backupState.archives.length;
-            const importedCount = importedBackup.archives.length;
-
-            const normalizeInput = (str: string | null) => {
-              if (!str) return '';
-              return str
-                .replace(/[０-９]/g, s => {
-                  return String.fromCharCode(s.charCodeAt(0) - 0xfee0);
-                })
-                .trim();
-            };
-
-            const userChoiceRaw = window.prompt(
-              `バックアップ読込 (現在のデータ: ${currentCount}件, 読込データ: ${importedCount}件)\n` +
-                `1: 結合 (Merge)\n2: 上書き (Replace)`,
-              '1'
-            );
-
-            const userChoice = normalizeInput(userChoiceRaw);
-
-            if (userChoice === '1') {
-              const merged = mergeBackups(backupState, importedBackup);
-              setBackupState(merged);
-              showSuccess('データを結合しました。');
-              resolve(true);
-            } else if (userChoice === '2') {
-              if (window.confirm('データを全て上書きしますか？')) {
-                setBackupState(importedBackup);
-                showSuccess('データを上書きしました。');
-                resolve(true);
-              } else {
-                resolve(false);
-              }
-            } else {
-              resolve(false);
-            }
-          } else {
-            showError('無効なファイルです。');
-            resolve(false);
-          }
-        } catch (err) {
-          console.error(err);
-          showError('読込に失敗しました。');
-          resolve(false);
-        }
-      };
-      reader.readAsText(file);
-    });
   };
 
   return {

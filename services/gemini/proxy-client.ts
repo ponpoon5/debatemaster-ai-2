@@ -2,25 +2,22 @@
  * プロキシサーバー経由でGemini APIを呼び出すクライアント
  */
 
+import type {
+  GeminiGenerateContentParams,
+  GeminiStreamChunk,
+  GeminiUsageMetadata,
+  GeminiContent,
+  ProxyApiResponse,
+  ProxyApiError,
+} from '../../core/types/gemini-api.types';
+import { streamFromProxy } from './utils/streaming-processor';
+
 const PROXY_URL = import.meta.env.VITE_PROXY_URL || '';
-
-interface GenerateContentParams {
-  model: string;
-  contents: any;
-  config?: any;
-}
-
-interface StreamChunk {
-  text?: string;
-  usageMetadata?: any;
-  error?: string;
-  message?: string;
-}
 
 /**
  * 非ストリーミングでコンテンツを生成
  */
-export async function generateContentViaProxy(params: GenerateContentParams) {
+export async function generateContentViaProxy(params: GeminiGenerateContentParams): Promise<ProxyApiResponse> {
   const response = await fetch(`${PROXY_URL}/api/gemini/generate`, {
     method: 'POST',
     headers: {
@@ -30,7 +27,7 @@ export async function generateContentViaProxy(params: GenerateContentParams) {
   });
 
   if (!response.ok) {
-    const error = await response.json();
+    const error: ProxyApiError = await response.json();
     throw new Error(error.message || 'Failed to generate content');
   }
 
@@ -41,61 +38,21 @@ export async function generateContentViaProxy(params: GenerateContentParams) {
  * ストリーミングでコンテンツを生成
  */
 export async function* generateContentStreamViaProxy(
-  params: GenerateContentParams
-): AsyncGenerator<StreamChunk> {
-  const response = await fetch(`${PROXY_URL}/api/gemini/generate-stream`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(params),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to start stream');
-  }
-
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error('No reader available');
-
-  const decoder = new TextDecoder();
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') return;
-
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.error) {
-              throw new Error(parsed.message || 'Stream error');
-            }
-            yield parsed;
-          } catch (e) {
-            // JSON parse error - skip line
-          }
-        }
-      }
-    }
-  } finally {
-    reader.releaseLock();
-  }
+  params: GeminiGenerateContentParams
+): AsyncGenerator<GeminiStreamChunk> {
+  yield* streamFromProxy(`${PROXY_URL}/api/gemini/generate-stream`, params);
 }
 
 interface ChatStreamParams {
   model: string;
-  history: any[];
+  history: GeminiContent[];
   message: string;
-  config?: any;
+  config?: {
+    temperature?: number;
+    topK?: number;
+    topP?: number;
+    maxOutputTokens?: number;
+  };
 }
 
 /**
@@ -103,53 +60,8 @@ interface ChatStreamParams {
  */
 export async function* sendChatMessageStreamViaProxy(
   params: ChatStreamParams
-): AsyncGenerator<StreamChunk> {
-  const response = await fetch(`${PROXY_URL}/api/gemini/chat-stream`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(params),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.message || 'Failed to start chat stream');
-  }
-
-  const reader = response.body?.getReader();
-  if (!reader) throw new Error('No reader available');
-
-  const decoder = new TextDecoder();
-
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') return;
-
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.error) {
-              throw new Error(parsed.message || 'Chat stream error');
-            }
-            yield parsed;
-          } catch (e) {
-            // JSON parse error - skip line
-          }
-        }
-      }
-    }
-  } finally {
-    reader.releaseLock();
-  }
+): AsyncGenerator<GeminiStreamChunk> {
+  yield* streamFromProxy(`${PROXY_URL}/api/gemini/chat-stream`, params);
 }
 
 /**

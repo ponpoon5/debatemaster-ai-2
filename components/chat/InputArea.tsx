@@ -36,7 +36,7 @@ interface InputAreaProps {
   onNextTurn?: () => void;
 }
 
-export const InputArea: React.FC<InputAreaProps> = ({
+export const InputArea: React.FC<InputAreaProps> = React.memo(({
   inputText,
   setInputText,
   isSending,
@@ -224,4 +224,4 @@ export const InputArea: React.FC<InputAreaProps> = ({
       </div>
     </div>
   );
-};
+});

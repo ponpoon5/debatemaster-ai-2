@@ -79,7 +79,7 @@ const getMoveStyle = (type: string) => {
   }
 };
 
-export const SupportPanel: React.FC<SupportPanelProps> = ({
+export const SupportPanel: React.FC<SupportPanelProps> = React.memo(({
   advice,
   detectedFallacy,
   fallacyExplanation,
@@ -279,4 +279,4 @@ export const SupportPanel: React.FC<SupportPanelProps> = ({
       </div>
     </div>
   );
-};
+});

@@ -24,7 +24,7 @@ interface MessageItemProps {
   onHighlightClick?: () => void;
 }
 
-export const MessageItem: React.FC<MessageItemProps> = ({
+export const MessageItem: React.FC<MessageItemProps> = React.memo(({
   msg,
   settings,
   analysis,
@@ -71,4 +71,4 @@ export const MessageItem: React.FC<MessageItemProps> = ({
       onHighlightClick={onHighlightClick}
     />
   );
-};
+});

@@ -24,7 +24,10 @@ export const createDebateChat = (
   thinkingFramework?: ThinkingFramework,
   storyScenario?: StoryScenario
 ): Chat => {
-  const config: any = {
+  const config: {
+    systemInstruction: string;
+    responseMimeType?: string;
+  } = {
     systemInstruction: getSystemInstruction(
       topic,
       difficulty,
@@ -43,7 +46,11 @@ export const createDebateChat = (
     config.responseMimeType = 'application/json';
   }
 
-  const chatOptions: any = {
+  const chatOptions: {
+    model: string;
+    config: typeof config;
+    history?: Array<{ role: string; parts: Array<{ text: string }> }>;
+  } = {
     model: MODEL_NAME,
     config: config,
   };

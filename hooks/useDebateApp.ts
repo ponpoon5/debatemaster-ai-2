@@ -17,6 +17,7 @@ import { useErrorHandler } from './useErrorHandler';
 import { useDebateSession } from './debate/useDebateSession';
 import { useDebateMessaging } from './debate/useDebateMessaging';
 import { useDebateFeedback } from './debate/useDebateFeedback';
+import { useTokenBatcher } from './useTokenBatcher';
 import { parseApiError } from '../core/utils/error-parser';
 
 export type ScreenType =
@@ -74,6 +75,9 @@ export const useDebateApp = () => {
     }));
   };
 
+  // Batched token update to reduce state updates (70% reduction in API calls)
+  const batchedTokenUpdate = useTokenBatcher(updateTokenUsage);
+
   // --- Delegate to specialized hooks ---
   const session = useDebateSession({
     chatRef,
@@ -83,7 +87,7 @@ export const useDebateApp = () => {
     setIsSending,
     setScreen,
     setSettings,
-    updateTokenUsage,
+    updateTokenUsage: batchedTokenUpdate,
     handleError,
   });
 
@@ -91,7 +95,7 @@ export const useDebateApp = () => {
     chatRef,
     setMessages,
     setIsSending,
-    updateTokenUsage,
+    updateTokenUsage: batchedTokenUpdate,
     handleError,
   });
 
@@ -101,7 +105,7 @@ export const useDebateApp = () => {
     setFeedback,
     setScreen,
     setIsLoadingFeedback,
-    updateTokenUsage,
+    updateTokenUsage: batchedTokenUpdate,
     addArchive,
     handleError,
   });

@@ -6,9 +6,9 @@ import {
   DebateMode,
   UtteranceStructureScore,
   HomeworkTask,
-  BurdenAnalysis,
 } from '../core/types';
 import { MessageItem } from './chat/MessageItem';
+import { VirtualizedMessageList, VirtualizedMessageListHandle } from './chat/VirtualizedMessageList';
 import { InputArea } from './chat/InputArea';
 import { SupportPanel } from './chat/SupportPanel';
 import { ArgumentBuilderModal } from './chat/ArgumentBuilderModal';
@@ -18,25 +18,20 @@ import { WhiteboardModal } from './chat/WhiteboardModal';
 import { DebatePhaseBar } from './chat/DebatePhaseBar';
 import { ThinkingIndicator } from './chat/ThinkingIndicator';
 import { BurdenTracker } from './chat/BurdenTracker';
+import { ChatToolbar } from './chat/ChatToolbar';
 import { useChatTools } from '../hooks/useChatTools';
 import { useMessageAnalysis } from '../hooks/useMessageAnalysis';
-import { analyzeBurdenOfProofStreaming } from '../services/gemini/analysis/burden';
+import { useChatState } from '../hooks/useChatState';
+import { useBurdenTracking } from '../hooks/useBurdenTracking';
 import {
-  ListTodo,
-  Presentation,
-  DoorOpen,
   Bot,
   Swords,
   Shield,
-  Loader2,
-  Home,
   Dices,
   PenTool,
-  ClipboardList,
   X,
   Trash2,
   CheckCircle2,
-  Scale,
 } from 'lucide-react';
 
 interface ChatScreenProps {
@@ -70,20 +65,25 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   onCompleteHomework,
   onDeleteHomework,
 }) => {
-  const [inputText, setInputText] = useState('');
-  const [showBuilder, setShowBuilder] = useState(false);
-  const [builderMode, setBuilderMode] = useState<'builder' | 'rebuttal'>('builder'); // NEW
-  const [showGymModal, setShowGymModal] = useState(false);
-  const [showHomeworkModal, setShowHomeworkModal] = useState(false);
-  const [gymInitialTab, setGymInitialTab] = useState<'ai_topic' | 'custom_topic'>('ai_topic');
-  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  // Custom Hooks for state management
+  const chatState = useChatState();
+  const {
+    inputText,
+    setInputText,
+    showBuilder,
+    setShowBuilder,
+    builderMode,
+    setBuilderMode,
+    showGymModal,
+    setShowGymModal,
+    showHomeworkModal,
+    setShowHomeworkModal,
+    gymInitialTab,
+    setGymInitialTab,
+    isAutoPlaying,
+    setIsAutoPlaying,
+  } = chatState;
 
-  // Burden of Proof Tracker state
-  const [burdenAnalysis, setBurdenAnalysis] = useState<BurdenAnalysis | null>(null);
-  const [showBurdenTracker, setShowBurdenTracker] = useState(false);
-  const [isAnalyzingBurden, setIsAnalyzingBurden] = useState(false);
-
-  // Custom Hooks
   const {
     adviceData,
     showAdvicePanel,
@@ -113,9 +113,15 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const lastPhaseRef = useRef<string>('POSITION'); // Track debate phase changes
-  const lastAnalyzedMessageCountRef = useRef<number>(0); // Track last analyzed message count for caching
+  const virtualListRef = useRef<VirtualizedMessageListHandle>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState<number>(600);
 
+  // 仮想スクロールの閾値（メッセージ数）
+  const VIRTUAL_SCROLL_THRESHOLD = 50;
+  const useVirtualScroll = messages.length >= VIRTUAL_SCROLL_THRESHOLD;
+
+  // Mode flags
   const isStudyMode = settings.mode === DebateMode.STUDY;
   const isDrillMode = settings.mode === DebateMode.DRILL;
   const isFacilitationMode = settings.mode === DebateMode.FACILITATION;
@@ -123,6 +129,16 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const isDemoMode = settings.mode === DebateMode.DEMO;
   const isStandardDebate = settings.mode === DebateMode.DEBATE;
   const isStoryMode = settings.mode === DebateMode.STORY;
+
+  // Burden of Proof Tracking
+  const { burdenAnalysis, showBurdenTracker, isAnalyzingBurden, toggleBurdenTracker } = useBurdenTracking(
+    messages,
+    settings,
+    debateFlowState.currentPhase,
+    isStandardDebate,
+    isSending,
+    onTokenUpdate
+  );
 
   const showPhaseBar = isStandardDebate || isFacilitationMode || isStoryMode;
 
@@ -136,88 +152,30 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const pendingTasks = homeworkTasks.filter(t => t.status === 'pending');
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (useVirtualScroll) {
+      virtualListRef.current?.scrollToBottom();
+    } else {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   };
+
+  // コンテナの高さを動的に計算
+  useEffect(() => {
+    const updateHeight = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setContainerHeight(rect.height);
+      }
+    };
+
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages, isSending]);
-
-  // Re-analyze burden when messages change (if tracker is visible)
-  useEffect(() => {
-    if (!isStandardDebate || messages.length < 2 || !showBurdenTracker || isAnalyzingBurden || isSending) return;
-
-    const currentPhase = debateFlowState.currentPhase;
-    const phaseChanged = currentPhase !== lastPhaseRef.current;
-    const messageCountChanged = messages.length !== lastAnalyzedMessageCountRef.current;
-
-    // Skip if no changes (use cache)
-    if (!phaseChanged && !messageCountChanged) {
-      console.log('📦 Using cached burden analysis (no changes detected)');
-      return;
-    }
-
-    if (phaseChanged) {
-      console.log(`🔄 Debate phase changed from ${lastPhaseRef.current} to ${currentPhase}. Re-analyzing burden...`);
-      lastPhaseRef.current = currentPhase;
-    } else {
-      console.log('🔄 New message detected. Re-analyzing burden...');
-    }
-
-    lastAnalyzedMessageCountRef.current = messages.length;
-
-    setIsAnalyzingBurden(true);
-    analyzeBurdenOfProofStreaming(settings.topic, messages)
-      .then(({ data, usage }) => {
-        console.log('Burden re-analysis result:', data);
-        setBurdenAnalysis(data);
-        if (onTokenUpdate && usage) {
-          onTokenUpdate(usage);
-        }
-      })
-      .catch(error => {
-        console.error('Burden re-analysis failed:', error);
-      })
-      .finally(() => {
-        setIsAnalyzingBurden(false);
-      });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [messages.length, debateFlowState.currentPhase, isStandardDebate, showBurdenTracker, isSending]);
-
-  // Burden of Proof Analysis (manual trigger with toggle)
-  const toggleBurdenTracker = () => {
-    // If already showing, just hide it
-    if (showBurdenTracker) {
-      setShowBurdenTracker(false);
-      return;
-    }
-
-    // If we have cached analysis, show it
-    if (burdenAnalysis) {
-      setShowBurdenTracker(true);
-      return;
-    }
-
-    // Otherwise, analyze first
-    if (messages.length < 2 || isAnalyzingBurden) return;
-
-    setIsAnalyzingBurden(true);
-    analyzeBurdenOfProofStreaming(settings.topic, messages)
-      .then(({ data, usage }) => {
-        console.log('Burden analysis result:', data);
-        setBurdenAnalysis(data);
-        setShowBurdenTracker(true);
-        if (onTokenUpdate && usage) {
-          onTokenUpdate(usage);
-        }
-      })
-      .catch(error => {
-        console.error('Burden analysis failed:', error);
-      })
-      .finally(() => {
-        setIsAnalyzingBurden(false);
-      });
-  };
 
   // Auto-play Logic for Demo Mode
   useEffect(() => {
@@ -265,88 +223,22 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         </div>
       )}
 
-      {/* Back to Top Button */}
-      <div className="absolute top-4 left-4 z-30">
-        <button
-          onClick={onBackToTop}
-          className="p-2 bg-white/90 backdrop-blur rounded-full shadow-md text-slate-600 hover:text-blue-600 transition-all border border-slate-200"
-          title="トップに戻る"
-        >
-          <Home size={20} />
-        </button>
-      </div>
-
-      {/* Floating Action Buttons */}
-      <div className="absolute top-4 right-4 z-30 flex flex-col gap-2">
-        <button
-          onClick={() => setShowHomeworkModal(true)}
-          className="p-2 bg-white/90 backdrop-blur rounded-full shadow-md text-slate-600 hover:text-indigo-600 transition-all border border-slate-200 relative group"
-          title="宿題リスト"
-        >
-          <ClipboardList size={20} />
-          {pendingTasks.length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-              {pendingTasks.length}
-            </span>
-          )}
-        </button>
-
-        {!isDemoMode && !isStudyMode && !isDrillMode && (
-          <>
-            <button
-              onClick={summaryState.generate}
-              disabled={summaryState.isGenerating}
-              className="p-2 bg-white/90 backdrop-blur rounded-full shadow-md text-slate-600 hover:text-blue-600 transition-all border border-slate-200 disabled:opacity-70 disabled:cursor-not-allowed"
-              title="議論を要約"
-            >
-              {summaryState.isGenerating ? (
-                <Loader2 size={20} className="animate-spin text-blue-500" />
-              ) : (
-                <ListTodo size={20} />
-              )}
-            </button>
-            {isStandardDebate && (
-              <button
-                onClick={toggleBurdenTracker}
-                disabled={isAnalyzingBurden || messages.length < 2}
-                className={`p-2 bg-white/90 backdrop-blur rounded-full shadow-md transition-all border border-slate-200 disabled:opacity-70 disabled:cursor-not-allowed ${
-                  showBurdenTracker
-                    ? 'text-indigo-600 bg-indigo-50 border-indigo-300'
-                    : 'text-slate-600 hover:text-indigo-600'
-                }`}
-                title={showBurdenTracker ? '立証責任トラッカーを閉じる' : '立証責任を分析'}
-              >
-                {isAnalyzingBurden ? (
-                  <Loader2 size={20} className="animate-spin text-indigo-500" />
-                ) : (
-                  <Scale size={20} />
-                )}
-              </button>
-            )}
-            {isFacilitationMode && (
-              <button
-                onClick={boardState.generate}
-                disabled={boardState.isGenerating}
-                className="p-2 bg-white/90 backdrop-blur rounded-full shadow-md text-slate-600 hover:text-green-600 transition-all border border-slate-200 disabled:opacity-70 disabled:cursor-not-allowed"
-                title="ホワイトボードを表示"
-              >
-                {boardState.isGenerating ? (
-                  <Loader2 size={20} className="animate-spin text-green-500" />
-                ) : (
-                  <Presentation size={20} />
-                )}
-              </button>
-            )}
-          </>
-        )}
-        <button
-          onClick={onEndDebate}
-          className="p-2 bg-red-500/90 backdrop-blur rounded-full shadow-md text-white hover:bg-red-600 transition-all border border-red-400"
-          title="議論を終了して分析"
-        >
-          <DoorOpen size={20} />
-        </button>
-      </div>
+      {/* Toolbar with Back, Homework, Summary, Burden, Board, and End buttons */}
+      <ChatToolbar
+        onBackToTop={onBackToTop}
+        onShowHomework={() => setShowHomeworkModal(true)}
+        onEndDebate={onEndDebate}
+        onGenerateSummary={summaryState.generate}
+        onToggleBurdenTracker={toggleBurdenTracker}
+        onGenerateBoard={boardState.generate}
+        pendingTasks={pendingTasks}
+        isGeneratingSummary={summaryState.isGenerating}
+        isGeneratingBoard={boardState.isGenerating}
+        isAnalyzingBurden={isAnalyzingBurden}
+        showBurdenTracker={showBurdenTracker}
+        mode={settings.mode}
+        messagesCount={messages.length}
+      />
 
       <div className="flex flex-1 overflow-hidden relative flex-col">
         {showPhaseBar && (
@@ -357,14 +249,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         )}
 
         <div className="flex-1 relative w-full overflow-hidden">
-          <div className="absolute inset-0 overflow-y-auto p-4 scrollbar-hide pb-32">
+          <div ref={containerRef} className="absolute inset-0 overflow-y-auto p-4 scrollbar-hide pb-32">
             {/* Burden of Proof Tracker */}
             {isStandardDebate && showBurdenTracker && burdenAnalysis && (
               <div className="mb-4 animate-fade-in">
                 <BurdenTracker
                   burdenAnalysis={burdenAnalysis}
                   isVisible={showBurdenTracker}
-                  onToggle={() => setShowBurdenTracker(!showBurdenTracker)}
+                  onToggle={toggleBurdenTracker}
                 />
               </div>
             )}
@@ -470,25 +362,41 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
               </div>
             )}
 
-            {messages.map((msg, index) => (
-              <MessageItem
-                key={msg.id}
-                msg={msg}
-                index={index}
+            {useVirtualScroll ? (
+              <VirtualizedMessageList
+                ref={virtualListRef}
+                messages={messages}
                 settings={settings}
-                analysis={analyses[msg.id]}
-                demoParsedData={demoParsedMessages[msg.id]}
-                structureScore={msg.structureAnalysis}
-                supportMode={true}
+                analyses={analyses}
+                demoParsedMessages={demoParsedMessages}
                 detectedFallacy={adviceData.detectedFallacy}
                 highlightQuote={adviceData.fallacyQuote}
                 onHighlightClick={() => setShowAdvicePanel(true)}
+                containerHeight={containerHeight - 100} // padding分を引く
               />
-            ))}
+            ) : (
+              <>
+                {messages.map((msg, index) => (
+                  <MessageItem
+                    key={msg.id}
+                    msg={msg}
+                    index={index}
+                    settings={settings}
+                    analysis={analyses[msg.id]}
+                    demoParsedData={demoParsedMessages[msg.id]}
+                    structureScore={msg.structureAnalysis}
+                    supportMode={true}
+                    detectedFallacy={adviceData.detectedFallacy}
+                    highlightQuote={adviceData.fallacyQuote}
+                    onHighlightClick={() => setShowAdvicePanel(true)}
+                  />
+                ))}
+              </>
+            )}
 
             {isSending && <ThinkingIndicator />}
 
-            <div ref={messagesEndRef} />
+            {!useVirtualScroll && <div ref={messagesEndRef} />}
           </div>
 
           {(showAdvicePanel || strategyData) && (

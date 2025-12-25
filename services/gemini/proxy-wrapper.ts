@@ -5,12 +5,20 @@
 
 import { GoogleGenAI } from '@google/genai';
 import { API_KEY, USE_PROXY, PROXY_URL } from '../../core/config/gemini.config';
+import type {
+  GeminiGenerateContentParams,
+  GeminiResponse,
+  GeminiStreamChunk,
+  ProxyApiResponse,
+  ProxyApiError,
+} from '../../core/types/gemini-api.types';
+import { streamFromProxy } from './utils/streaming-processor';
 
 /**
  * プロキシ経由でAPI呼び出しを行うクライアント
  */
 class ProxyAIClient {
-  async generateContent(params: any): Promise<any> {
+  async generateContent(params: GeminiGenerateContentParams): Promise<GeminiResponse> {
     const { model, contents, config } = params;
 
     const response = await fetch(`${PROXY_URL}/api/gemini/generate`, {
@@ -22,11 +30,11 @@ class ProxyAIClient {
     });
 
     if (!response.ok) {
-      const error = await response.json();
+      const error: ProxyApiError = await response.json();
       throw new Error(error.message || 'Proxy request failed');
     }
 
-    const data = await response.json();
+    const data: ProxyApiResponse = await response.json();
     return {
       text: data.text,
       usageMetadata: data.usageMetadata,
@@ -36,61 +44,12 @@ class ProxyAIClient {
         usageMetadata: data.usageMetadata,
         candidates: data.candidates,
       },
-    };
+    } as GeminiResponse;
   }
 
-  async *generateContentStream(params: any): AsyncGenerator<any> {
+  async *generateContentStream(params: GeminiGenerateContentParams): AsyncGenerator<GeminiStreamChunk> {
     const { model, contents, config } = params;
-
-    const response = await fetch(`${PROXY_URL}/api/gemini/generate-stream`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ model, contents, config }),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Proxy stream request failed');
-    }
-
-    const reader = response.body?.getReader();
-    if (!reader) throw new Error('No reader available');
-
-    const decoder = new TextDecoder();
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') return;
-
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.error) {
-                throw new Error(parsed.message || 'Stream error');
-              }
-              yield {
-                text: parsed.text || '',
-                usageMetadata: parsed.usageMetadata,
-              };
-            } catch (e) {
-              // JSON parse error - skip
-            }
-          }
-        }
-      }
-    } finally {
-      reader.releaseLock();
-    }
+    yield* streamFromProxy(`${PROXY_URL}/api/gemini/generate-stream`, { model, contents, config });
   }
 }
 
@@ -109,20 +68,20 @@ class ModelsWrapper {
     }
   }
 
-  async generateContent(params: any): Promise<any> {
+  async generateContent(params: GeminiGenerateContentParams): Promise<GeminiResponse> {
     if (USE_PROXY && this.proxyClient) {
       return await this.proxyClient.generateContent(params);
     } else if (this.directClient) {
-      return await this.directClient.models.generateContent(params);
+      return await this.directClient.models.generateContent(params) as Promise<GeminiResponse>;
     }
     throw new Error('No client available');
   }
 
-  async generateContentStream(params: any): AsyncGenerator<any> {
+  async generateContentStream(params: GeminiGenerateContentParams): AsyncGenerator<GeminiStreamChunk> {
     if (USE_PROXY && this.proxyClient) {
       return this.proxyClient.generateContentStream(params);
     } else if (this.directClient) {
-      return this.directClient.models.generateContentStream(params);
+      return this.directClient.models.generateContentStream(params) as AsyncGenerator<GeminiStreamChunk>;
     }
     throw new Error('No client available');
   }
@@ -138,7 +97,11 @@ class ChatsWrapper {
     this.wrapper = wrapper;
   }
 
-  create(options: any) {
+  create(options: {
+    model: string;
+    history?: Array<{ role: string; parts: Array<{ text: string }> }>;
+    config?: Record<string, unknown>;
+  }) {
     // chats.create()は内部でgetGenerativeModel().startChat()を呼ぶだけ
     const genModel = this.wrapper.getGenerativeModel({ model: options.model });
     return genModel.startChat({
@@ -168,7 +131,7 @@ class AIClientWrapper {
     // 直接モードの場合は本物のGoogleGenAI、プロキシモードの場合はラッパー
     if (USE_PROXY) {
       return {
-        generateContent: async (params: any) => {
+        generateContent: async (params: { contents: unknown; generationConfig?: unknown; config?: unknown }) => {
           const response = await fetch(`${PROXY_URL}/api/gemini/generate`, {
             method: 'POST',
             headers: {
@@ -182,11 +145,11 @@ class AIClientWrapper {
           });
 
           if (!response.ok) {
-            const error = await response.json();
+            const error: ProxyApiError = await response.json();
             throw new Error(error.message || 'Proxy request failed');
           }
 
-          const data = await response.json();
+          const data: ProxyApiResponse = await response.json();
           return {
             text: data.text,
             usageMetadata: data.usageMetadata,
@@ -196,13 +159,17 @@ class AIClientWrapper {
             },
           };
         },
-        startChat: (chatParams: any) => {
+        startChat: (chatParams: {
+          history?: Array<{ role: string; parts: Array<{ text: string }> }>;
+          systemInstruction?: string;
+          generationConfig?: unknown;
+        }) => {
           // プロキシモード用のチャットラッパー
           // ローカルで会話履歴を蓄積し、各リクエストで送信する
           let accumulatedHistory = chatParams.history || [];
 
           return {
-            sendMessage: async (message: any) => {
+            sendMessage: async (message: { message: string }) => {
               const response = await fetch(`${PROXY_URL}/api/gemini/chat`, {
                 method: 'POST',
                 headers: {
@@ -239,7 +206,7 @@ class AIClientWrapper {
                 },
               };
             },
-            sendMessageStream: async (message: any) => {
+            sendMessageStream: async (message: { message: string }) => {
               const response = await fetch(`${PROXY_URL}/api/gemini/chat-stream`, {
                 method: 'POST',
                 headers: {
@@ -329,14 +296,18 @@ class AIClientWrapper {
       // 互換性のためのラッパーオブジェクトを返す
       const directClient = new GoogleGenAI({ apiKey: API_KEY });
       return {
-        generateContent: async (params: any) => {
+        generateContent: async (params: { contents: unknown; generationConfig?: unknown }) => {
           return await directClient.models.generateContent({
             model: config.model,
             contents: params.contents,
             generationConfig: params.generationConfig,
           });
         },
-        startChat: (chatParams: any) => {
+        startChat: (chatParams: {
+          history?: Array<{ role: string; parts: Array<{ text: string }> }>;
+          systemInstruction?: string;
+          generationConfig?: unknown;
+        }) => {
           // chatsAPIを使ってチャットセッションを作成
           return directClient.chats.create({
             model: config.model,

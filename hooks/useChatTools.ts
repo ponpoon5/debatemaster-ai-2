@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import {
   Message,
   DebateSettings,
@@ -64,9 +64,9 @@ export const useChatTools = ({
   const [isGeneratingBoard, setIsGeneratingBoard] = useState(false);
   const boardCacheRef = useRef<number>(-1);
 
-  // --- Actions ---
+  // --- Actions (memoized with useCallback) ---
 
-  const handleGetAdvice = async () => {
+  const handleGetAdvice = useCallback(async () => {
     const trimmedInput = inputText.trim();
     const contextKey = `${messages.length}:${trimmedInput}`;
 
@@ -113,9 +113,9 @@ export const useChatTools = ({
     } finally {
       setIsGettingAdvice(false);
     }
-  };
+  }, [messages, inputText, settings.topic, onTokenUpdate]);
 
-  const handleGetStrategy = async () => {
+  const handleGetStrategy = useCallback(async () => {
     if (messages.length === 0) return;
 
     const contextKey = messages.length.toString();
@@ -146,9 +146,9 @@ export const useChatTools = ({
     } finally {
       setIsGeneratingStrategy(false);
     }
-  };
+  }, [messages, settings.topic, onTokenUpdate]);
 
-  const handleGetSummary = async () => {
+  const handleGetSummary = useCallback(async () => {
     setIsSummaryOpen(true);
     if (messages.length === summaryCacheRef.current && summaryPoints.length > 0) return;
 
@@ -164,9 +164,9 @@ export const useChatTools = ({
     } finally {
       setIsGeneratingSummary(false);
     }
-  };
+  }, [messages, settings.topic, onTokenUpdate, summaryPoints.length]);
 
-  const handleOpenWhiteboard = async () => {
+  const handleOpenWhiteboard = useCallback(async () => {
     setIsBoardOpen(true);
     if (messages.length === boardCacheRef.current && boardData) return;
 
@@ -181,9 +181,9 @@ export const useChatTools = ({
     } finally {
       setIsGeneratingBoard(false);
     }
-  };
+  }, [messages, settings.topic, onTokenUpdate, boardData]);
 
-  const resetTools = () => {
+  const resetTools = useCallback(() => {
     setAdviceData({
       advice: null,
       detectedFallacy: null,
@@ -193,7 +193,7 @@ export const useChatTools = ({
     });
     setShowAdvicePanel(false);
     setStrategyData(null);
-  };
+  }, []);
 
   return {
     adviceData,

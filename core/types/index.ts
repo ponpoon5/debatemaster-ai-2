@@ -9,3 +9,4 @@ export * from './persistence.types';
 export * from './homework.types';
 export * from './error.types';
 export * from './burden.types';
+export * from './gemini-api.types';

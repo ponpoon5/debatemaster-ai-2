@@ -15,6 +15,8 @@ import {
   analyzeDebatePhase,
   analyzeUtteranceStructureStreaming,
 } from '../services/gemini/index';
+import { isDemoMode, requiresDebateAnalysis } from '../core/utils/mode-helpers';
+import { useToast } from './useToast';
 
 interface UseMessageAnalysisProps {
   messages: Message[];
@@ -29,6 +31,7 @@ export const useMessageAnalysis = ({
   onTokenUpdate,
   onStructureAnalysisComplete,
 }: UseMessageAnalysisProps) => {
+  const { showError } = useToast();
   const [analyses, setAnalyses] = useState<Record<string, ArgumentAnalysis>>({});
   const [analyzingMessageIds, setAnalyzingMessageIds] = useState<Set<string>>(new Set());
   const [demoParsedMessages, setDemoParsedMessages] = useState<Record<string, DemoTurn>>({});
@@ -44,16 +47,14 @@ export const useMessageAnalysis = ({
   const [processedStructureIds, setProcessedStructureIds] = useState<Set<string>>(new Set());
 
   const lastAnalyzedPhaseRef = useRef<number>(0); // Track message count for phase analysis
+  const processedMessageIdsRef = useRef<Set<string>>(new Set()); // Track all processed message IDs for fact/opinion analysis
 
-  const isDemoMode = settings.mode === DebateMode.DEMO;
-  const isDebateMode =
-    settings.mode === DebateMode.DEBATE ||
-    settings.mode === DebateMode.FACILITATION ||
-    settings.mode === DebateMode.STORY;
+  const isDemo = isDemoMode(settings);
+  const isDebateMode = requiresDebateAnalysis(settings);
 
   // Parse Demo Messages
   useEffect(() => {
-    if (isDemoMode) {
+    if (isDemo) {
       messages.forEach(msg => {
         if (msg.role === 'model' && !demoParsedMessages[msg.id]) {
           try {
@@ -68,51 +69,57 @@ export const useMessageAnalysis = ({
         }
       });
     }
-  }, [messages, isDemoMode]);
+  }, [messages, isDemo]);
 
   // Analyze User Messages (Fact/Opinion + Structure)
+  // Optimized: Only process new messages instead of re-processing all messages
   useEffect(() => {
-    messages.forEach(async msg => {
-      // Base Condition for Analysis
-      if (
+    // Filter only unprocessed messages
+    const unprocessedMessages = messages.filter(
+      msg =>
         msg.role === 'user' &&
+        !processedMessageIdsRef.current.has(msg.id) &&
         !analyzingMessageIds.has(msg.id) &&
         msg.text.trim().length > 10 &&
-        !isDemoMode
-      ) {
-        setAnalyzingMessageIds(prev => new Set(prev).add(msg.id));
+        !isDemo
+    );
 
-        try {
-          // 1. Fact/Opinion Analysis
-          if (!analyses[msg.id]) {
-            const result = await analyzeFactOpinion(msg.text);
-            setAnalyses(prev => ({ ...prev, [msg.id]: result.analysis }));
-            if (onTokenUpdate) onTokenUpdate(result.usage);
-          }
+    // Process only new messages
+    unprocessedMessages.forEach(async msg => {
+      processedMessageIdsRef.current.add(msg.id);
+      setAnalyzingMessageIds(prev => new Set(prev).add(msg.id));
 
-          // 2. Structure Analysis (New Feature)
-          // Only analyze structure for substantial messages in debate modes
-          if (isDebateMode && !msg.structureAnalysis && !processedStructureIds.has(msg.id)) {
-            setProcessedStructureIds(prev => new Set(prev).add(msg.id));
-            const structResult = await analyzeUtteranceStructureStreaming(msg);
-
-            if (onStructureAnalysisComplete) {
-              onStructureAnalysisComplete(msg.id, structResult.result);
-            }
-            if (onTokenUpdate) onTokenUpdate(structResult.usage);
-          }
-        } catch (e) {
-          console.error('Analysis failed', e);
-        } finally {
-          setAnalyzingMessageIds(prev => {
-            const next = new Set(prev);
-            next.delete(msg.id);
-            return next;
-          });
+      try {
+        // 1. Fact/Opinion Analysis
+        if (!analyses[msg.id]) {
+          const result = await analyzeFactOpinion(msg.text);
+          setAnalyses(prev => ({ ...prev, [msg.id]: result.analysis }));
+          if (onTokenUpdate) onTokenUpdate(result.usage);
         }
+
+        // 2. Structure Analysis (New Feature)
+        // Only analyze structure for substantial messages in debate modes
+        if (isDebateMode && !msg.structureAnalysis && !processedStructureIds.has(msg.id)) {
+          setProcessedStructureIds(prev => new Set(prev).add(msg.id));
+          const structResult = await analyzeUtteranceStructureStreaming(msg);
+
+          if (onStructureAnalysisComplete) {
+            onStructureAnalysisComplete(msg.id, structResult.result);
+          }
+          if (onTokenUpdate) onTokenUpdate(structResult.usage);
+        }
+      } catch (e) {
+        console.error('❌ Analysis failed for message:', msg.id, e);
+        showError('メッセージ分析に失敗しました');
+      } finally {
+        setAnalyzingMessageIds(prev => {
+          const next = new Set(prev);
+          next.delete(msg.id);
+          return next;
+        });
       }
     });
-  }, [messages, isDemoMode, isDebateMode]);
+  }, [messages.length, isDemo, isDebateMode]); // Watch messages.length instead of messages array
 
   // Analyze Debate Phase (Triggered every time a new message is added, but throttled logically)
   useEffect(() => {
@@ -129,7 +136,8 @@ export const useMessageAnalysis = ({
           }));
           if (onTokenUpdate) onTokenUpdate(usage);
         } catch (e) {
-          console.error('Phase analysis failed', e);
+          console.error('❌ Phase analysis failed', e);
+          showError('討論フェーズ分析に失敗しました');
         }
       }
     };
