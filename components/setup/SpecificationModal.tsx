@@ -46,11 +46,10 @@ export const SpecificationModal: React.FC<SpecificationModalProps> = ({ isOpen, 
             </div>
             <div>
               <h3 className="text-3xl font-black text-slate-800 tracking-tighter">
-                TECHNICAL MASTER SPEC <span className="text-indigo-600">v3.4.1</span>
+                TECHNICAL MASTER SPEC <span className="text-indigo-600">v3.4.4</span>
               </h3>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.3em] flex items-center gap-2">
-                <Activity size={12} className="text-emerald-500" /> Complete System Blueprint for
-                Reconstruction
+                <Activity size={12} className="text-emerald-500" /> Production-Ready System with Proxy Architecture
               </p>
             </div>
           </div>
@@ -86,10 +85,10 @@ export const SpecificationModal: React.FC<SpecificationModalProps> = ({ isOpen, 
               <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 hover:border-emerald-300 transition-all hover:shadow-lg">
                 <div className="flex items-center gap-2 mb-4">
                   <ShieldCheck size={20} className="text-emerald-500" />
-                  <h5 className="font-extrabold text-slate-800">Walton スキーム検証</h5>
+                  <h5 className="font-extrabold text-slate-800">立証責任トラッカー</h5>
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  「専門家の意見」「因果関係」等の議論型を特定。AIが内部的に保持する「批判的質問(CQ)」リストと照合し、論理の妥当性を科学的に評価する。
+                  Waltonの批判的質問理論に基づき、主張・反証・立証責任の状態をリアルタイムで追跡。議論の力学を可視化し、戦略的な思考を支援する。
                 </p>
               </div>
 
@@ -228,6 +227,79 @@ export const SpecificationModal: React.FC<SpecificationModalProps> = ({ isOpen, 
             </div>
           </section>
 
+          {/* Section 4: Production Architecture */}
+          <section className="space-y-8">
+            <div className="flex items-center gap-3 text-indigo-700">
+              <Terminal size={28} strokeWidth={2.5} />
+              <h4 className="text-2xl font-black m-0 italic uppercase tracking-tighter">
+                04. プロダクション・アーキテクチャ (v3.4.4)
+              </h4>
+            </div>
+            <div className="bg-gradient-to-br from-slate-900 to-indigo-900 p-8 rounded-[2.5rem] border border-slate-700 text-white">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className="space-y-4">
+                  <h5 className="font-bold text-indigo-200 flex items-center gap-2">
+                    <Code size={18} className="text-blue-400" /> Vercel Serverless Proxy
+                  </h5>
+                  <ul className="text-xs text-slate-300 space-y-2 list-disc pl-4 leading-relaxed font-medium">
+                    <li>5つのAPI Routes: /generate, /generate-stream, /chat, /chat-stream, /health</li>
+                    <li>会話履歴の自動蓄積ロジック（デモモード対応）</li>
+                    <li>APIキーの完全隠蔽（環境変数経由）</li>
+                    <li>統一レスポンス形式（response.text 自動抽出）</li>
+                  </ul>
+                </div>
+                <div className="space-y-4">
+                  <h5 className="font-bold text-indigo-200 flex items-center gap-2">
+                    <ShieldCheck size={18} className="text-emerald-400" /> セキュリティ三層防御
+                  </h5>
+                  <ul className="text-xs text-slate-300 space-y-2 list-disc pl-4 leading-relaxed font-medium">
+                    <li>レート制限: 100リクエスト/分/IP（メモリベース）</li>
+                    <li>CORS: ドメインホワイトリスト方式</li>
+                    <li>バリデーション: モデル名・コンテンツ長・配列形式チェック</li>
+                    <li>全18機能のAPI呼び出し形式を統一（contents配列化）</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Section 5: Fixed Features in v3.4.4 */}
+          <section className="space-y-8">
+            <div className="flex items-center gap-3 text-emerald-700">
+              <CheckCircle2 size={28} strokeWidth={2.5} />
+              <h4 className="text-2xl font-black m-0 italic uppercase tracking-tighter">
+                05. v3.4.4 修正済み機能
+              </h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                { label: 'デモモード', desc: 'Alice vs Bobの交互発言が正常動作' },
+                { label: '仮想ホワイトボード', desc: 'ファシリテーションモードでLive表示' },
+                { label: '前提確認', desc: 'トピック開始時の前提提案が動作' },
+                { label: 'アドバイス分析', desc: 'リアルタイム戦術提案が正常化' },
+                { label: '立証責任分析', desc: 'キャッシュ機能付きトラッカー' },
+                { label: '戦略分析', desc: 'フェーズごとの戦略提示が動作' },
+                { label: 'ミニゲーム', desc: '7種の思考ゲームが全て起動' },
+                { label: 'クイズ機能', desc: '誤謬検出クイズが正常動作' },
+                { label: '教科書モード', desc: '理論学習とラボが連動' },
+                { label: '思考ジム', desc: 'フレームワーク訓練が動作' },
+                { label: '合意形成最適化', desc: 'フィードバック生成速度を改善' },
+                { label: '詳細レビュー', desc: 'SBIモデル分析が全機能で動作' },
+              ].map((feature, i) => (
+                <div
+                  key={i}
+                  className="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 hover:shadow-lg transition-all"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 size={16} className="text-emerald-600" />
+                    <span className="font-bold text-sm text-slate-800">{feature.label}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-600 leading-relaxed">{feature.desc}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
           {/* Master Note */}
           <section className="bg-gradient-to-br from-indigo-900 to-slate-900 p-10 rounded-[3rem] text-white shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[120px] -mr-32 -mt-32"></div>
@@ -235,15 +307,21 @@ export const SpecificationModal: React.FC<SpecificationModalProps> = ({ isOpen, 
 
             <h4 className="text-xl font-black mb-6 flex items-center gap-3 border-b border-white/10 pb-6 uppercase tracking-widest italic">
               <Zap className="text-yellow-400 fill-yellow-400" size={24} />
-              Architect's Directive
+              Architect's Directive - v3.4.4 Production
             </h4>
-            <p className="text-sm opacity-90 leading-relaxed m-0 font-bold italic text-indigo-100">
-              本アプリを再現するにあたり、最も重要なのは「AIとの会話」ではなく「ユーザー自身の論理的アップデート」である。
-              UIは常にユーザーの発言を解体し、不足している要素（特にWarrantとEvidence）を「痛み」としてではなく「成長の余白」として提示せよ。
-              アニメーションのラグ、フィードバックのトーン、全ては「真理への探求」という知的格闘技の臨場感を演出するためにある。
-              このドキュメントは、単なるコードの指針ではなく、DebateMaster
-              AIという「知能の鏡」を構築するための設計図である。
-            </p>
+            <div className="space-y-4">
+              <p className="text-sm opacity-90 leading-relaxed m-0 font-bold italic text-indigo-100">
+                本アプリを再現するにあたり、最も重要なのは「AIとの会話」ではなく「ユーザー自身の論理的アップデート」である。
+                UIは常にユーザーの発言を解体し、不足している要素（特にWarrantとEvidence）を「痛み」としてではなく「成長の余白」として提示せよ。
+                アニメーションのラグ、フィードバックのトーン、全ては「真理への探求」という知的格闘技の臨場感を演出するためにある。
+              </p>
+              <p className="text-sm opacity-90 leading-relaxed m-0 font-bold italic text-emerald-200 border-t border-white/10 pt-4">
+                v3.4.4では、全機能がVercel Serverless環境で動作する本番環境仕様に到達した。
+                プロキシアーキテクチャによるAPIキーの完全隠蔽、セキュリティ三層防御、会話履歴の自動蓄積ロジック、そして全18機能の統一API形式化により、
+                DebateMaster AIは「研究プロトタイプ」から「プロダクションレディな教育プラットフォーム」へと進化した。
+                このドキュメントは、単なるコードの指針ではなく、DebateMaster AIという「知能の鏡」を構築するための完全設計図である。
+              </p>
+            </div>
           </section>
         </div>
       </div>

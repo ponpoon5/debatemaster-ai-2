@@ -329,20 +329,30 @@ export const SystemInfoModal: React.FC<SystemInfoModalProps> = ({ isOpen, onClos
     const fileTree = generateFileTreeText(FILE_TREE_DATA);
 
     return `
-# DebateMaster AI vv3.4.1 - System Architecture Report
+# DebateMaster AI vv3.4.4 - System Architecture Report
 
 ## Technology Stack
 - Frontend: React 19 / TypeScript
-- Styling: Tailwind CSS
+- Styling: Tailwind CSS v4 (PostCSS)
 - AI Model: Google Gemini 2.5 Flash
+- Backend: Vercel Serverless Functions (Proxy Architecture)
 - Persistence: Browser Local Storage with Schema Versioning (v4)
 - Intelligence: Walton Argumentation Schemes & Toulmin Model Integration
 
 ## Architecture Features
-- Client-side inference (Serverless)
+- Vercel Serverless Proxy with API key protection
+- Security: Rate limiting (100/min/IP), CORS whitelisting, Input validation
+- Conversation history accumulation for demo mode
 - Advanced logical structure mapping
 - Real-time debate phase detection
 - SBI-model based feedback generation
+- Burden of proof tracker with caching
+
+## Production Enhancements (v3.4.4)
+- 5 API Routes: /generate, /generate-stream, /chat, /chat-stream, /health
+- Unified API format across all 18 features
+- Optimized facilitation mode feedback generation
+- All features fully operational in production
 
 ## File Structure
 ${fileTree}
