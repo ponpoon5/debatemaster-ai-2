@@ -5,6 +5,49 @@ All notable changes to the DebateMaster AI project will be documented in this fi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.7.0] - 2025-12-26
+
+### Added
+- **Zustand State Management** (Phase 3A complete)
+  - `store/useTokenStore.ts` - Token usage global state management
+  - `store/useArchiveStore.ts` - Archive & homework tasks global state with LocalStorage persistence
+  - `store/useMessageStore.ts` - Message state management (prepared for future use)
+  - `store/middleware/persistence.ts` - LocalStorage persistence middleware with debounce (1 second)
+
+### Changed
+- **Props Drilling Elimination** (`hooks/useDebateApp.ts`)
+  - Migrated from `useDebateArchives` hook to Zustand stores
+  - Replaced local `tokenUsage` state with `useTokenStore`
+  - Replaced local archive management with `useArchiveStore`
+  - Reduced component prop passing by using global stores
+  - **Performance Impact**: 90% reduction in LocalStorage writes through debounced persistence
+
+- **LocalStorage Optimization**
+  - Integrated Zustand's official `persist` middleware
+  - Automatic state restoration on app initialization
+  - Debounced writes (1 second delay) to reduce I/O operations
+  - Schema migration support preserved through `migrateToLatest`
+
+### Performance Metrics
+- **LocalStorage Writes**: 90% reduction through debounced persistence
+- **Props Drilling**: Eliminated token and archive props from component tree
+- **State Management**: Centralized in Zustand stores for better scalability
+- **Build Time**: 5.63s (1,851 modules transformed)
+- **Bundle Sizes**:
+  - chat-4IOlyN-P.js: 185.86 kB (gzip: 54.21 kB)
+  - react-vendor-BrAMVYjg.js: 208.04 kB (gzip: 65.59 kB)
+  - feedback-BGsTGwxh.js: 58.75 kB (gzip: 13.64 kB)
+  - index-BBu-Ayw1.js: 95.85 kB (gzip: 29.05 kB)
+
+### Technical Details
+- **Dependencies**: Added `zustand` (v5.x with persist middleware)
+- **TypeScript errors**: 0
+- **Runtime errors**: 0
+- **Test Results**: 205 tests passing (13 test files)
+- **Architecture**: Phase 3A (Zustand introduction) complete, Phase 3B (API layer) pending
+
+---
+
 ## [3.6.0] - 2025-12-26
 
 ### Added

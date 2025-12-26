@@ -11,7 +11,9 @@ import {
   TrainingRecommendation,
 } from '../core/types';
 import { Chat } from '@google/genai';
-import { useDebateArchives } from './useDebateArchives';
+import { useArchiveStore } from '../store/useArchiveStore';
+import { useTokenStore } from '../store/useTokenStore';
+import { useBackupRestore } from './useBackupRestore';
 import { useLoadingSimulation } from './useLoadingSimulation';
 import { useErrorHandler } from './useErrorHandler';
 import { useDebateSession } from './debate/useDebateSession';
@@ -36,28 +38,28 @@ export const useDebateApp = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackData | null>(null);
-  const [tokenUsage, setTokenUsage] = useState<TokenUsage>({
-    inputTokens: 0,
-    outputTokens: 0,
-    totalTokens: 0,
-  });
   const [viewingArchive, setViewingArchive] = useState<boolean>(false);
   const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
 
   const chatRef = useRef<Chat | null>(null);
 
-  // --- Sub-Hooks ---
+  // --- Zustand Stores ---
+  const { tokenUsage, updateTokenUsage: storeUpdateToken } = useTokenStore();
   const {
-    archives,
-    homeworkTasks,
+    backupState,
     addArchive,
-    deleteArchive,
+    deleteArchive: storeDeleteArchive,
     addHomework,
     completeHomework,
     deleteHomework,
-    exportData,
-    importData,
-  } = useDebateArchives();
+    setBackupState,
+  } = useArchiveStore();
+
+  const archives = backupState.archives;
+  const homeworkTasks = backupState.homeworkTasks;
+
+  // Backup/Restore functionality
+  const { exportData, importData } = useBackupRestore(backupState, setBackupState);
 
   const { progress, estimatedSeconds, elapsedSeconds, currentTip } = useLoadingSimulation(
     isLoadingFeedback,
@@ -68,11 +70,11 @@ export const useDebateApp = () => {
 
   // --- Utilities ---
   const updateTokenUsage = (usage: TokenUsage) => {
-    setTokenUsage(prev => ({
-      inputTokens: prev.inputTokens + usage.inputTokens,
-      outputTokens: prev.outputTokens + usage.outputTokens,
-      totalTokens: prev.totalTokens + usage.totalTokens,
-    }));
+    storeUpdateToken({
+      inputTokens: tokenUsage.inputTokens + usage.inputTokens,
+      outputTokens: tokenUsage.outputTokens + usage.outputTokens,
+      totalTokens: tokenUsage.totalTokens + usage.totalTokens,
+    });
   };
 
   // Batched token update to reduce state updates (70% reduction in API calls)
@@ -137,6 +139,12 @@ export const useDebateApp = () => {
       mode: DebateMode.DEBATE,
     } as any);
     setScreen('feedback');
+  };
+
+  const handleDeleteArchive = (id: string) => {
+    if (window.confirm('この履歴を削除してもよろしいですか？')) {
+      storeDeleteArchive(id);
+    }
   };
 
   const handleNavigateToTraining = (rec: TrainingRecommendation) => {
@@ -218,7 +226,7 @@ export const useDebateApp = () => {
     handleEndDebate: feedbackLogic.handleEndDebate,
     handleReset,
     handleSelectArchive,
-    handleDeleteArchive: deleteArchive,
+    handleDeleteArchive,
     handleAddHomework: addHomework,
     handleCompleteHomework: completeHomework,
     handleDeleteHomework: deleteHomework,
