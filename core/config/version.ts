@@ -4,14 +4,14 @@
  */
 
 export const APP_VERSION = {
-  major: 4,
+  major: 5,
   minor: 0,
   patch: 0,
-  full: '4.0.0',
+  full: '5.0.0',
   name: 'DebateMaster AI',
-  displayName: 'DebateMaster AI vv4.0.0',
+  displayName: 'DebateMaster AI vv5.0.0',
   releaseDate: '2025-12-26',
-  codename: 'Performance Pro',
+  codename: 'Quality Assured',
 } as const;
 
 export const getVersionString = () => {
