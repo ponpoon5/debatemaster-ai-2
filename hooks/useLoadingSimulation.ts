@@ -8,9 +8,9 @@ export const useLoadingSimulation = (isLoading: boolean, complexityFactor: numbe
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
   useEffect(() => {
-    let progressInterval: any;
-    let timerInterval: any;
-    let tipInterval: any;
+    let progressInterval: ReturnType<typeof setInterval> | undefined;
+    let timerInterval: ReturnType<typeof setInterval> | undefined;
+    let tipInterval: ReturnType<typeof setInterval> | undefined;
 
     if (isLoading) {
       // Calculate estimated time based on conversation length (complexity)

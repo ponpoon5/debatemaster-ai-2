@@ -82,7 +82,7 @@ export const useMiniGameLogic = (
     }
   };
 
-  const submitAnswer = async (userAnswer: any) => {
+  const submitAnswer = async (userAnswer: string | number) => {
     if (!activeGameType || !gameData) return;
     setGameState('loading');
 

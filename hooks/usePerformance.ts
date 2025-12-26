@@ -41,7 +41,7 @@ export const useWhyDidYouUpdate = (name: string, props: Record<string, any>) => 
   useEffect(() => {
     if (previousProps.current && process.env.NODE_ENV === 'development') {
       const allKeys = Object.keys({ ...previousProps.current, ...props });
-      const changedProps: Record<string, { from: any; to: any }> = {};
+      const changedProps: Record<string, { from: unknown; to: unknown }> = {};
 
       allKeys.forEach(key => {
         if (previousProps.current?.[key] !== props[key]) {
