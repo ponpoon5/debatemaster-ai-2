@@ -52,7 +52,10 @@
       "Bash(tail:*)",
       "Bash(dir:*)",
       "Bash(git tag:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(if [ -f .vercel/project.json ])",
+      "Bash(then cat .vercel/project.json)",
+      "Bash(else echo \"Vercel project not linked\")"
     ]
   }
 }
