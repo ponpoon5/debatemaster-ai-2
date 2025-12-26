@@ -2,8 +2,14 @@ import React from 'react';
 import { CheckCircle2, X, ArrowRight } from 'lucide-react';
 import { Button } from '../Button';
 
+interface AttackQuizData {
+  opponentClaim: string;
+  rebuttal: string;
+  correctAttackType?: number;
+}
+
 interface AttackQuizViewProps {
-  data: any;
+  data: AttackQuizData;
   evaluationResult: { isCorrect: boolean; feedback: string } | null;
   onAnswer: (index: number) => void;
   onNext: () => void;

@@ -45,7 +45,16 @@ export const useChatTools = ({
   });
   const [showAdvicePanel, setShowAdvicePanel] = useState(false);
   const [isGettingAdvice, setIsGettingAdvice] = useState(false);
-  const adviceCacheRef = useRef<{ key: string; data: any } | null>(null);
+  const adviceCacheRef = useRef<{
+    key: string;
+    data: {
+      advice: string | null;
+      detectedFallacy: string | null;
+      fallacyQuote: string | null;
+      fallacyExplanation: string | null;
+      sentimentScore: number | null;
+    };
+  } | null>(null);
 
   // Strategy State
   const [strategyData, setStrategyData] = useState<StrategyAnalysis | null>(null);

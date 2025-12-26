@@ -48,7 +48,11 @@
       "Bash(npx tailwindcss:*)",
       "Bash(npm uninstall:*)",
       "Bash(git subtree push:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(tail:*)",
+      "Bash(dir:*)",
+      "Bash(git tag:*)",
+      "Bash(git restore:*)"
     ]
   }
 }

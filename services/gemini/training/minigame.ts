@@ -19,9 +19,9 @@ const FALLACY_TYPES = [
   'すべり坂論法 (Slippery Slope)',
 ];
 
-export const generateMiniGameContent = async (
+export const generateMiniGameContent = async <T = unknown>(
   gameType: MiniGameType
-): Promise<{ data: any; usage: TokenUsage }> => {
+): Promise<{ data: T; usage: TokenUsage }> => {
   let prompt = '';
   let schema: Schema | undefined;
 
@@ -212,8 +212,8 @@ export const generateMiniGameContent = async (
 
 export const evaluateMiniGameAnswer = async (
   gameType: MiniGameType,
-  questionData: any,
-  userAnswer: any
+  questionData: unknown,
+  userAnswer: unknown
 ): Promise<{ score: number; feedback: string; usage: TokenUsage }> => {
   let specificCriteria = '';
 

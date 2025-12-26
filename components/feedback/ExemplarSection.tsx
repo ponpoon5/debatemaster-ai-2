@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExemplarMetricSet, ExemplarItem, Message } from '../../core/types';
+import { ExemplarMetricSet, ExemplarItem, Message, MessageReview } from '../../core/types';
 import {
   BookOpen,
   User,
@@ -13,7 +13,7 @@ import {
 interface ExemplarSectionProps {
   exemplars: ExemplarMetricSet[];
   messages: Message[];
-  detailedReview: any[]; // Added to access betterResponse
+  detailedReview: MessageReview[];
 }
 
 export const ExemplarSection: React.FC<ExemplarSectionProps> = React.memo(({ exemplars, messages, detailedReview }) => {

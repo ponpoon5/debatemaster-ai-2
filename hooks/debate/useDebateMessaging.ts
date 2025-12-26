@@ -10,7 +10,7 @@ interface UseDebateMessagingParams {
   setMessages: (messages: Message[] | ((prev: Message[]) => Message[])) => void;
   setIsSending: (sending: boolean) => void;
   updateTokenUsage: (usage: TokenUsage) => void;
-  handleError: (error: any, context?: string) => void;
+  handleError: (error: unknown, context?: string) => void;
 }
 
 export const useDebateMessaging = ({

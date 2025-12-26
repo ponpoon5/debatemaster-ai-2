@@ -67,11 +67,12 @@ app.post('/api/gemini/generate', async (req, res) => {
       text: result.text,
       usageMetadata: result.usageMetadata,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Gemini API Error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     res.status(500).json({
       error: 'Failed to generate content',
-      message: error.message,
+      message,
     });
   }
 });
@@ -108,10 +109,11 @@ app.post('/api/gemini/generate-stream', async (req, res) => {
 
     res.write('data: [DONE]\n\n');
     res.end();
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Gemini Streaming API Error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     res.write(
-      `data: ${JSON.stringify({ error: 'Stream failed', message: error.message })}\n\n`
+      `data: ${JSON.stringify({ error: 'Stream failed', message })}\n\n`
     );
     res.end();
   }
@@ -151,10 +153,11 @@ app.post('/api/gemini/chat-stream', async (req, res) => {
 
     res.write('data: [DONE]\n\n');
     res.end();
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Gemini Chat Streaming API Error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     res.write(
-      `data: ${JSON.stringify({ error: 'Chat stream failed', message: error.message })}\n\n`
+      `data: ${JSON.stringify({ error: 'Chat stream failed', message })}\n\n`
     );
     res.end();
   }

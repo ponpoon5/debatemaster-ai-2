@@ -2,8 +2,15 @@ import React from 'react';
 import { CheckCircle2, X, ArrowRight } from 'lucide-react';
 import { Button } from '../Button';
 
+interface WeighingQuizData {
+  scenario: string;
+  optionA: string;
+  optionB: string;
+  correctCriteria?: string;
+}
+
 interface WeighingQuizViewProps {
-  data: any;
+  data: WeighingQuizData;
   evaluationResult: { isCorrect: boolean; feedback: string } | null;
   onAnswer: (criteria: string) => void;
   onNext: () => void;

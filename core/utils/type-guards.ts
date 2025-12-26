@@ -2,8 +2,10 @@ import { Message, UtteranceStructureScore } from '../types';
 import { ApiError } from '../types/error.types';
 
 // usageMetadata型ガード
-export function hasValidUsageMetadata(response: any): boolean {
-  return response?.usageMetadata !== null && response?.usageMetadata !== undefined;
+export function hasValidUsageMetadata(response: unknown): boolean {
+  if (typeof response !== 'object' || response === null) return false;
+  const obj = response as Record<string, unknown>;
+  return obj.usageMetadata !== null && obj.usageMetadata !== undefined;
 }
 
 // structureAnalysis型ガード（拡張Message型へのnarrowingに使用）

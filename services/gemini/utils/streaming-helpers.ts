@@ -1,5 +1,6 @@
 import { ai } from '../client';
 import { TokenUsage } from '../../../core/types';
+import { GeminiGenerateContentParams } from '../../../core/types/gemini-api.types';
 import { cleanText } from './text-cleaner';
 import { extractUsage } from './token-usage';
 import { parseApiError } from '../../../core/utils/error-parser';
@@ -46,7 +47,7 @@ export interface StreamingOptions {
  * @returns パースされたJSONデータとトークン使用量
  */
 export async function streamJsonContent<T>(
-  params: any,
+  params: GeminiGenerateContentParams,
   onProgress?: (partialText: string) => void
 ): Promise<{ data: T; usage: TokenUsage }> {
   let accumulatedText = '';
@@ -122,7 +123,7 @@ export async function streamJsonContent<T>(
  * @yields ストリーミングチャンク
  */
 export async function* streamTextContent(
-  params: any,
+  params: GeminiGenerateContentParams,
   batchSize: number = 10
 ): AsyncGenerator<StreamingChunk> {
   let buffer = '';

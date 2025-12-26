@@ -36,7 +36,7 @@ interface UseDebateSessionParams {
   setScreen: (screen: ScreenType) => void;
   setSettings: (settings: DebateSettings | null) => void;
   updateTokenUsage: (usage: TokenUsage) => void;
-  handleError: (error: any, context?: string) => void;
+  handleError: (error: unknown, context?: string) => void;
 }
 
 export const useDebateSession = ({

@@ -8,17 +8,18 @@ import {
   WeaknessProfile,
 } from '../../core/types';
 
-type MigrationFn = (data: any) => any;
+type MigrationFn = (data: unknown) => unknown;
 
-const sanitizeArchive = (archive: any): DebateArchive => {
-  const safeFeedback = archive.feedback || {};
+const sanitizeArchive = (archive: unknown): DebateArchive => {
+  const arch = archive as Record<string, unknown>;
+  const safeFeedback = (arch.feedback as Record<string, unknown>) || {};
   return {
-    ...archive,
-    id: archive.id || Date.now().toString(),
-    date: archive.date || new Date().toISOString(),
-    lastModified: archive.lastModified || archive.date || new Date().toISOString(),
-    topic: archive.topic || 'Unknown Topic',
-    messages: Array.isArray(archive.messages) ? archive.messages : [],
+    ...arch,
+    id: (arch.id as string) || Date.now().toString(),
+    date: (arch.date as string) || new Date().toISOString(),
+    lastModified: (arch.lastModified as string) || (arch.date as string) || new Date().toISOString(),
+    topic: (arch.topic as string) || 'Unknown Topic',
+    messages: Array.isArray(arch.messages) ? arch.messages : [],
     feedback: {
       score: typeof safeFeedback.score === 'number' ? safeFeedback.score : 0,
       summary: safeFeedback.summary || 'No summary available.',
@@ -50,7 +51,7 @@ const sanitizeArchive = (archive: any): DebateArchive => {
   };
 };
 
-const migrateLegacyToV1: MigrationFn = (data: any) => {
+const migrateLegacyToV1: MigrationFn = (data: unknown) => {
   if (Array.isArray(data)) {
     return {
       schemaVersion: 1,
@@ -63,38 +64,44 @@ const migrateLegacyToV1: MigrationFn = (data: any) => {
   return data;
 };
 
-const migrateV1toV2: MigrationFn = (data: any) => {
-  const archives = (data.archives || []).map((a: any) => ({
-    ...a,
-    lastModified: a.lastModified || a.date || new Date().toISOString(),
-  }));
-  return { ...data, schemaVersion: 2, archives };
+const migrateV1toV2: MigrationFn = (data: unknown) => {
+  const d = data as Record<string, unknown>;
+  const archives = ((d.archives as unknown[]) || []).map((a: unknown) => {
+    const arch = a as Record<string, unknown>;
+    return {
+      ...arch,
+      lastModified: (arch.lastModified as string) || (arch.date as string) || new Date().toISOString(),
+    };
+  });
+  return { ...d, schemaVersion: 2, archives };
 };
 
-const migrateV2toV3: MigrationFn = (data: any) => {
-  const userProfile = data.userProfile || {
+const migrateV2toV3: MigrationFn = (data: unknown) => {
+  const d = data as Record<string, unknown>;
+  const userProfile = (d.userProfile as Record<string, unknown>) || {
     pseudoUserId: `user_${Date.now().toString(36)}_${Math.random().toString(36).substr(2, 5)}`,
     displayName: 'Guest',
   };
-  const archives = (data.archives || []).map(sanitizeArchive);
-  return { ...data, schemaVersion: 3, userProfile, archives };
+  const archives = ((d.archives as unknown[]) || []).map(sanitizeArchive);
+  return { ...d, schemaVersion: 3, userProfile, archives };
 };
 
 /**
  * Migration 3 -> 4: Add homeworkTasks and weaknessProfile
  */
-const migrateV3toV4: MigrationFn = (data: any) => {
+const migrateV3toV4: MigrationFn = (data: unknown) => {
   console.log('Migration [3 -> 4]: Initializing Homework & WeaknessProfile');
+  const d = data as Record<string, unknown>;
   const emptyProfile: WeaknessProfile = {
     lastUpdated: new Date().toISOString(),
-    metrics: {} as any,
+    metrics: {},
   };
 
   return {
-    ...data,
+    ...d,
     schemaVersion: 4,
-    homeworkTasks: data.homeworkTasks || [],
-    weaknessProfile: data.weaknessProfile || emptyProfile,
+    homeworkTasks: d.homeworkTasks || [],
+    weaknessProfile: d.weaknessProfile || emptyProfile,
   };
 };
 
@@ -105,7 +112,7 @@ const MIGRATIONS: Record<number, MigrationFn> = {
   3: migrateV3toV4,
 };
 
-export const migrateToLatest = (input: any): DebateMasterBackup => {
+export const migrateToLatest = (input: unknown): DebateMasterBackup => {
   let currentData = input;
   let currentVersion = 0;
 
@@ -184,10 +191,11 @@ export const downloadBackupFile = (backup: DebateMasterBackup) => {
   URL.revokeObjectURL(url);
 };
 
-export const validateBackup = (data: any): boolean => {
+export const validateBackup = (data: unknown): boolean => {
   if (!data || typeof data !== 'object') return false;
+  const d = data as Record<string, unknown>;
   return (
-    Array.isArray(data) || typeof data.schemaVersion === 'number' || Array.isArray(data.archives)
+    Array.isArray(data) || typeof d.schemaVersion === 'number' || Array.isArray(d.archives)
   );
 };
 

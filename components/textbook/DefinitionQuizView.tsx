@@ -2,8 +2,15 @@ import React from 'react';
 import { CheckCircle2, X, ArrowRight } from 'lucide-react';
 import { Button } from '../Button';
 
+interface DefinitionQuizData {
+  word: string;
+  definition: string;
+  counterExample: string;
+  correctFlawType?: string;
+}
+
 interface DefinitionQuizViewProps {
-  data: any;
+  data: DefinitionQuizData;
   evaluationResult: { isCorrect: boolean; feedback: string } | null;
   onAnswer: (flawType: string) => void;
   onNext: () => void;

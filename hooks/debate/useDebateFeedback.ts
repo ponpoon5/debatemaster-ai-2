@@ -29,7 +29,7 @@ interface UseDebateFeedbackParams {
   setIsLoadingFeedback: (loading: boolean) => void;
   updateTokenUsage: (usage: TokenUsage) => void;
   addArchive: (archive: DebateArchive, settings: DebateSettings) => void;
-  handleError: (error: any, context?: string) => void;
+  handleError: (error: unknown, context?: string) => void;
 }
 
 export const useDebateFeedback = ({
