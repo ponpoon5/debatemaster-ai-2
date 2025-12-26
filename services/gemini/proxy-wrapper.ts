@@ -13,6 +13,7 @@ import type {
   ProxyApiError,
 } from '../../core/types/gemini-api.types';
 import { streamFromProxy } from './utils/streaming-processor';
+import { withRetry } from '../api/retry';
 
 /**
  * プロキシ経由でAPI呼び出しを行うクライアント
@@ -21,30 +22,32 @@ class ProxyAIClient {
   async generateContent(params: GeminiGenerateContentParams): Promise<GeminiResponse> {
     const { model, contents, config } = params;
 
-    const response = await fetch(`${PROXY_URL}/api/gemini/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ model, contents, config }),
-    });
+    return withRetry(async () => {
+      const response = await fetch(`${PROXY_URL}/api/gemini/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ model, contents, config }),
+      });
 
-    if (!response.ok) {
-      const error: ProxyApiError = await response.json();
-      throw new Error(error.message || 'Proxy request failed');
-    }
+      if (!response.ok) {
+        const error: ProxyApiError = await response.json();
+        throw new Error(error.message || 'Proxy request failed');
+      }
 
-    const data: ProxyApiResponse = await response.json();
-    return {
-      text: data.text,
-      usageMetadata: data.usageMetadata,
-      candidates: data.candidates,
-      response: {
-        text: () => data.text,
+      const data: ProxyApiResponse = await response.json();
+      return {
+        text: data.text,
         usageMetadata: data.usageMetadata,
         candidates: data.candidates,
-      },
-    } as GeminiResponse;
+        response: {
+          text: () => data.text,
+          usageMetadata: data.usageMetadata,
+          candidates: data.candidates,
+        },
+      } as GeminiResponse;
+    });
   }
 
   async *generateContentStream(params: GeminiGenerateContentParams): AsyncGenerator<GeminiStreamChunk> {
@@ -72,7 +75,9 @@ class ModelsWrapper {
     if (USE_PROXY && this.proxyClient) {
       return await this.proxyClient.generateContent(params);
     } else if (this.directClient) {
-      return await this.directClient.models.generateContent(params) as Promise<GeminiResponse>;
+      return withRetry(async () => {
+        return await this.directClient!.models.generateContent(params) as Promise<GeminiResponse>;
+      });
     }
     throw new Error('No client available');
   }
@@ -132,32 +137,34 @@ class AIClientWrapper {
     if (USE_PROXY) {
       return {
         generateContent: async (params: { contents: unknown; generationConfig?: unknown; config?: unknown }) => {
-          const response = await fetch(`${PROXY_URL}/api/gemini/generate`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: config.model,
-              contents: params.contents,
-              config: params.generationConfig || params.config,
-            }),
-          });
+          return withRetry(async () => {
+            const response = await fetch(`${PROXY_URL}/api/gemini/generate`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: config.model,
+                contents: params.contents,
+                config: params.generationConfig || params.config,
+              }),
+            });
 
-          if (!response.ok) {
-            const error: ProxyApiError = await response.json();
-            throw new Error(error.message || 'Proxy request failed');
-          }
+            if (!response.ok) {
+              const error: ProxyApiError = await response.json();
+              throw new Error(error.message || 'Proxy request failed');
+            }
 
-          const data: ProxyApiResponse = await response.json();
-          return {
-            text: data.text,
-            usageMetadata: data.usageMetadata,
-            response: {
-              text: () => data.text,
+            const data: ProxyApiResponse = await response.json();
+            return {
+              text: data.text,
               usageMetadata: data.usageMetadata,
-            },
-          };
+              response: {
+                text: () => data.text,
+                usageMetadata: data.usageMetadata,
+              },
+            };
+          });
         },
         startChat: (chatParams: {
           history?: Array<{ role: string; parts: Array<{ text: string }> }>;
@@ -170,41 +177,43 @@ class AIClientWrapper {
 
           return {
             sendMessage: async (message: { message: string }) => {
-              const response = await fetch(`${PROXY_URL}/api/gemini/chat`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  model: config.model,
-                  history: accumulatedHistory,
-                  message: message.message,
-                  config: chatParams.generationConfig,
-                }),
-              });
+              return withRetry(async () => {
+                const response = await fetch(`${PROXY_URL}/api/gemini/chat`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    model: config.model,
+                    history: accumulatedHistory,
+                    message: message.message,
+                    config: chatParams.generationConfig,
+                  }),
+                });
 
-              if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Chat request failed');
-              }
+                if (!response.ok) {
+                  const error = await response.json();
+                  throw new Error(error.message || 'Chat request failed');
+                }
 
-              const data = await response.json();
+                const data = await response.json();
 
-              // 履歴に追加（ユーザーメッセージとAIレスポンス）
-              accumulatedHistory = [
-                ...accumulatedHistory,
-                { role: 'user', parts: [{ text: message.message }] },
-                { role: 'model', parts: [{ text: data.text }] },
-              ];
+                // 履歴に追加（ユーザーメッセージとAIレスポンス）
+                accumulatedHistory = [
+                  ...accumulatedHistory,
+                  { role: 'user', parts: [{ text: message.message }] },
+                  { role: 'model', parts: [{ text: data.text }] },
+                ];
 
-              return {
-                text: data.text,
-                usageMetadata: data.usageMetadata,
-                response: {
-                  text: () => data.text,
+                return {
+                  text: data.text,
                   usageMetadata: data.usageMetadata,
-                },
-              };
+                  response: {
+                    text: () => data.text,
+                    usageMetadata: data.usageMetadata,
+                  },
+                };
+              });
             },
             sendMessageStream: async (message: { message: string }) => {
               const response = await fetch(`${PROXY_URL}/api/gemini/chat-stream`, {
@@ -297,10 +306,12 @@ class AIClientWrapper {
       const directClient = new GoogleGenAI({ apiKey: API_KEY });
       return {
         generateContent: async (params: { contents: unknown; generationConfig?: unknown }) => {
-          return await directClient.models.generateContent({
-            model: config.model,
-            contents: params.contents,
-            generationConfig: params.generationConfig,
+          return withRetry(async () => {
+            return await directClient.models.generateContent({
+              model: config.model,
+              contents: params.contents,
+              generationConfig: params.generationConfig,
+            });
           });
         },
         startChat: (chatParams: {
