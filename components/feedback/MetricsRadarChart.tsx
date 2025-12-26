@@ -7,7 +7,7 @@ interface MetricsRadarChartProps {
   overallScore?: number;
 }
 
-export const MetricsRadarChart: React.FC<MetricsRadarChartProps> = ({
+export const MetricsRadarChart: React.FC<MetricsRadarChartProps> = React.memo(({
   metrics,
   overallScore = 0,
 }) => {
@@ -196,4 +196,4 @@ export const MetricsRadarChart: React.FC<MetricsRadarChartProps> = ({
       </div>
     </div>
   );
-};
+});

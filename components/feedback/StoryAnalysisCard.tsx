@@ -6,7 +6,7 @@ interface StoryAnalysisCardProps {
   story: StoryAnalysis;
 }
 
-export const StoryAnalysisCard: React.FC<StoryAnalysisCardProps> = ({ story }) => {
+export const StoryAnalysisCard: React.FC<StoryAnalysisCardProps> = React.memo(({ story }) => {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-teal-200 animate-fade-in mb-6">
       <div className="flex items-center gap-3 mb-6">
@@ -73,4 +73,4 @@ export const StoryAnalysisCard: React.FC<StoryAnalysisCardProps> = ({ story }) =
       </div>
     </div>
   );
-};
+});

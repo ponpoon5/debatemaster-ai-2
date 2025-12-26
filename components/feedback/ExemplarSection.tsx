@@ -16,7 +16,7 @@ interface ExemplarSectionProps {
   detailedReview: any[]; // Added to access betterResponse
 }
 
-export const ExemplarSection: React.FC<ExemplarSectionProps> = ({ exemplars, messages, detailedReview }) => {
+export const ExemplarSection: React.FC<ExemplarSectionProps> = React.memo(({ exemplars, messages, detailedReview }) => {
   const [selectedMetricIndex, setSelectedMetricIndex] = useState(0);
   const [selectedUserMessageIndex, setSelectedUserMessageIndex] = useState<number | null>(null);
 
@@ -214,4 +214,4 @@ export const ExemplarSection: React.FC<ExemplarSectionProps> = ({ exemplars, mes
       </div>
     </div>
   );
-};
+});

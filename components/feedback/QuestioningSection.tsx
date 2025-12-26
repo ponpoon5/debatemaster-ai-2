@@ -10,7 +10,7 @@ interface QuestioningSectionProps {
   };
 }
 
-export const QuestioningSection: React.FC<QuestioningSectionProps> = ({ questioningAnalysis }) => {
+export const QuestioningSection: React.FC<QuestioningSectionProps> = React.memo(({ questioningAnalysis }) => {
   if (!questioningAnalysis) {
     return (
       <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-slate-500">
@@ -22,4 +22,4 @@ export const QuestioningSection: React.FC<QuestioningSectionProps> = ({ question
   return (
     <QuestioningCard stats={questioningAnalysis.stats} details={questioningAnalysis.details} />
   );
-};
+});

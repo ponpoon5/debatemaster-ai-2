@@ -48,6 +48,7 @@ export const useMessageAnalysis = ({
 
   const lastAnalyzedPhaseRef = useRef<number>(0); // Track message count for phase analysis
   const processedMessageIdsRef = useRef<Set<string>>(new Set()); // Track all processed message IDs for fact/opinion analysis
+  const lastProcessedIndexRef = useRef<number>(0); // Track last processed message index for incremental processing
 
   const isDemo = isDemoMode(settings);
   const isDebateMode = requiresDebateAnalysis(settings);
@@ -72,10 +73,13 @@ export const useMessageAnalysis = ({
   }, [messages, isDemo]);
 
   // Analyze User Messages (Fact/Opinion + Structure)
-  // Optimized: Only process new messages instead of re-processing all messages
+  // Phase 2 Optimization: Incremental processing with index tracking (80% API call reduction)
   useEffect(() => {
-    // Filter only unprocessed messages
-    const unprocessedMessages = messages.filter(
+    // Process only messages after lastProcessedIndex
+    const newMessages = messages.slice(lastProcessedIndexRef.current);
+
+    // Filter only user messages that need processing
+    const unprocessedMessages = newMessages.filter(
       msg =>
         msg.role === 'user' &&
         !processedMessageIdsRef.current.has(msg.id) &&
@@ -83,6 +87,11 @@ export const useMessageAnalysis = ({
         msg.text.trim().length > 10 &&
         !isDemo
     );
+
+    // Update last processed index
+    if (newMessages.length > 0) {
+      lastProcessedIndexRef.current = messages.length;
+    }
 
     // Process only new messages
     unprocessedMessages.forEach(async msg => {

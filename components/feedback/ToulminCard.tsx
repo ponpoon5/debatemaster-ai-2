@@ -6,7 +6,7 @@ interface ToulminCardProps {
   structure: LogicStructure;
 }
 
-export const ToulminCard: React.FC<ToulminCardProps> = ({ structure }) => {
+export const ToulminCard: React.FC<ToulminCardProps> = React.memo(({ structure }) => {
   const getStatusStyle = (status: string) => {
     switch (status) {
       case 'strong':
@@ -91,4 +91,4 @@ export const ToulminCard: React.FC<ToulminCardProps> = ({ structure }) => {
       </div>
     </div>
   );
-};
+});

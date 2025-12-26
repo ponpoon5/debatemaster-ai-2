@@ -7,7 +7,7 @@ interface LateralThinkingViewProps {
   onSubmit: (answer: string) => void;
 }
 
-export const LateralThinkingView: React.FC<LateralThinkingViewProps> = ({ data, onSubmit }) => {
+export const LateralThinkingView: React.FC<LateralThinkingViewProps> = React.memo(({ data, onSubmit }) => {
   const [hypothesis, setHypothesis] = useState('');
 
   return (
@@ -57,4 +57,4 @@ export const LateralThinkingView: React.FC<LateralThinkingViewProps> = ({ data, 
       </div>
     </div>
   );
-};
+});

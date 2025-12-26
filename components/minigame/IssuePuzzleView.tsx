@@ -12,7 +12,7 @@ interface IssuePuzzleViewProps {
   onSubmit: (orderedIds: string[]) => void;
 }
 
-export const IssuePuzzleView: React.FC<IssuePuzzleViewProps> = ({ data, onSubmit }) => {
+export const IssuePuzzleView: React.FC<IssuePuzzleViewProps> = React.memo(({ data, onSubmit }) => {
   const [puzzleOrder, setPuzzleOrder] = useState<Segment[]>([]);
 
   useEffect(() => {
@@ -72,4 +72,4 @@ export const IssuePuzzleView: React.FC<IssuePuzzleViewProps> = ({ data, onSubmit
       </div>
     </div>
   );
-};
+});

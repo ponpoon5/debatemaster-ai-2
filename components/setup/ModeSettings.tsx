@@ -14,7 +14,7 @@ interface ModeSettingsProps {
   onGenerateScenario: () => void;
 }
 
-export const ModeSettings: React.FC<ModeSettingsProps> = ({
+export const ModeSettings: React.FC<ModeSettingsProps> = React.memo(({
   activeMode,
   aStance,
   setAStance,
@@ -197,4 +197,4 @@ export const ModeSettings: React.FC<ModeSettingsProps> = ({
   }
 
   return null;
-};
+});

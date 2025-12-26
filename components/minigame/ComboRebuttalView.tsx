@@ -6,7 +6,7 @@ interface ComboRebuttalViewProps {
   onSubmit: (answer: string) => void;
 }
 
-export const ComboRebuttalView: React.FC<ComboRebuttalViewProps> = ({ data, onSubmit }) => {
+export const ComboRebuttalView: React.FC<ComboRebuttalViewProps> = React.memo(({ data, onSubmit }) => {
   return (
     <div className="bg-white p-8 rounded-3xl shadow-xl border border-slate-100 text-center w-full">
       <h3 className="text-sm font-bold text-slate-400 uppercase mb-6 tracking-wider">
@@ -38,4 +38,4 @@ export const ComboRebuttalView: React.FC<ComboRebuttalViewProps> = ({ data, onSu
       </form>
     </div>
   );
-};
+});

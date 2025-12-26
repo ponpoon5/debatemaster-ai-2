@@ -9,7 +9,7 @@ interface GameFeedbackOverlayProps {
   isNextAvailable: boolean;
 }
 
-export const GameFeedbackOverlay: React.FC<GameFeedbackOverlayProps> = ({
+export const GameFeedbackOverlay: React.FC<GameFeedbackOverlayProps> = React.memo(({
   roundScore,
   feedback,
   onNext,
@@ -51,4 +51,4 @@ export const GameFeedbackOverlay: React.FC<GameFeedbackOverlayProps> = ({
       </div>
     </div>
   );
-};
+});

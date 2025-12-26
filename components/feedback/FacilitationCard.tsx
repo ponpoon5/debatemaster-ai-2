@@ -6,7 +6,7 @@ interface FacilitationCardProps {
   facilitation: FacilitationAnalysis;
 }
 
-export const FacilitationCard: React.FC<FacilitationCardProps> = ({ facilitation }) => {
+export const FacilitationCard: React.FC<FacilitationCardProps> = React.memo(({ facilitation }) => {
   // Helper to ensure scores display as 1-10 range (AI sometimes returns out of 100)
   const formatScore = (val: number) => (val > 10 ? (val / 10).toFixed(1) : val);
 
@@ -82,4 +82,4 @@ export const FacilitationCard: React.FC<FacilitationCardProps> = ({ facilitation
       </div>
     </div>
   );
-};
+});

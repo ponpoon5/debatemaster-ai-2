@@ -23,7 +23,7 @@ const DEFINITION_FLAWS = [
   { label: '循環定義', value: 'Circular', desc: '定義の中にその言葉自体を使ってしまっている' },
 ];
 
-export const DefinitionQuizView: React.FC<DefinitionQuizViewProps> = ({
+export const DefinitionQuizView: React.FC<DefinitionQuizViewProps> = React.memo(({
   data,
   evaluationResult,
   onAnswer,
@@ -103,4 +103,4 @@ export const DefinitionQuizView: React.FC<DefinitionQuizViewProps> = ({
       )}
     </div>
   );
-};
+});

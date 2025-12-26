@@ -48,7 +48,7 @@ const getFallacyDescription = (fallacyName: string): string => {
   return 'この詭弁の説明は準備中です。一般的には論理的な誤りや不当な説得技法を指します。';
 };
 
-export const ActiveInoculationView: React.FC<ActiveInoculationViewProps> = ({ data, onSubmit }) => {
+export const ActiveInoculationView: React.FC<ActiveInoculationViewProps> = React.memo(({ data, onSubmit }) => {
   const [userText, setUserText] = useState('');
   const [selectedFallacy, setSelectedFallacy] = useState<number | null>(null);
 
@@ -179,4 +179,4 @@ export const ActiveInoculationView: React.FC<ActiveInoculationViewProps> = ({ da
       </div>
     </div>
   );
-};
+});

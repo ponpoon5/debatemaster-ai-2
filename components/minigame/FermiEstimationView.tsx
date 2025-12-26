@@ -7,7 +7,7 @@ interface FermiEstimationViewProps {
   onSubmit: (answer: { logic: string; value: string }) => void;
 }
 
-export const FermiEstimationView: React.FC<FermiEstimationViewProps> = ({ data, onSubmit }) => {
+export const FermiEstimationView: React.FC<FermiEstimationViewProps> = React.memo(({ data, onSubmit }) => {
   const [logic, setLogic] = useState('');
   const [value, setValue] = useState('');
 
@@ -65,4 +65,4 @@ export const FermiEstimationView: React.FC<FermiEstimationViewProps> = ({ data, 
       </div>
     </div>
   );
-};
+});

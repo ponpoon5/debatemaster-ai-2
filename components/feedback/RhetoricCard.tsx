@@ -6,7 +6,7 @@ interface RhetoricCardProps {
   rhetoric: RhetoricAnalysis;
 }
 
-export const RhetoricCard: React.FC<RhetoricCardProps> = ({ rhetoric }) => {
+export const RhetoricCard: React.FC<RhetoricCardProps> = React.memo(({ rhetoric }) => {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mt-6">
       <div className="flex items-center gap-3 mb-6 text-slate-800">
@@ -87,4 +87,4 @@ export const RhetoricCard: React.FC<RhetoricCardProps> = ({ rhetoric }) => {
       </div>
     </div>
   );
-};
+});

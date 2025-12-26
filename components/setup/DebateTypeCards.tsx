@@ -7,7 +7,7 @@ interface DebateTypeCardsProps {
   setDebateType: (type: DebateType) => void;
 }
 
-export const DebateTypeCards: React.FC<DebateTypeCardsProps> = ({ debateType, setDebateType }) => {
+export const DebateTypeCards: React.FC<DebateTypeCardsProps> = React.memo(({ debateType, setDebateType }) => {
   return (
     <div>
       <label className="block text-sm font-semibold text-slate-700 mb-3">
@@ -82,4 +82,4 @@ export const DebateTypeCards: React.FC<DebateTypeCardsProps> = ({ debateType, se
       </div>
     </div>
   );
-};
+});

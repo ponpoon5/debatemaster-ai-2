@@ -19,7 +19,7 @@ const ATTACK_TYPES = [
   '論点ずらし指摘',
 ];
 
-export const AttackQuizView: React.FC<AttackQuizViewProps> = ({
+export const AttackQuizView: React.FC<AttackQuizViewProps> = React.memo(({
   data,
   evaluationResult,
   onAnswer,
@@ -88,4 +88,4 @@ export const AttackQuizView: React.FC<AttackQuizViewProps> = ({
       )}
     </div>
   );
-};
+});

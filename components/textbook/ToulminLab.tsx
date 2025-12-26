@@ -8,7 +8,7 @@ interface ToulminLabProps {
   onTokenUpdate: (usage: TokenUsage) => void;
 }
 
-export const ToulminLab: React.FC<ToulminLabProps> = ({ onTokenUpdate }) => {
+export const ToulminLab: React.FC<ToulminLabProps> = React.memo(({ onTokenUpdate }) => {
   const [toulminState, setToulminState] = useState({ claim: '', data: '', warrant: '' });
   const [toulminResult, setToulminResult] = useState<ToulminLabResult | null>(null);
   const [isLabLoading, setIsLabLoading] = useState(false);
@@ -97,4 +97,4 @@ export const ToulminLab: React.FC<ToulminLabProps> = ({ onTokenUpdate }) => {
       )}
     </div>
   );
-};
+});

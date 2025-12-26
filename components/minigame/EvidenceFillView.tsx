@@ -6,7 +6,7 @@ interface EvidenceFillViewProps {
   onSubmit: (answer: string) => void;
 }
 
-export const EvidenceFillView: React.FC<EvidenceFillViewProps> = ({ data, onSubmit }) => {
+export const EvidenceFillView: React.FC<EvidenceFillViewProps> = React.memo(({ data, onSubmit }) => {
   const [textInput, setTextInput] = useState('');
 
   // Reset input when data changes
@@ -49,4 +49,4 @@ export const EvidenceFillView: React.FC<EvidenceFillViewProps> = ({ data, onSubm
       </Button>
     </div>
   );
-};
+});

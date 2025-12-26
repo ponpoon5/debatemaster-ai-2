@@ -18,7 +18,7 @@ interface AppHeaderProps {
   activeMode: DebateMode;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({ activeMode }) => {
+export const AppHeader: React.FC<AppHeaderProps> = React.memo(({ activeMode }) => {
   const getHeaderStyle = () => {
     switch (activeMode) {
       case DebateMode.TRAINING:
@@ -64,4 +64,4 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ activeMode }) => {
       <p className="text-xs text-slate-400 mt-1">Release: {APP_VERSION.releaseDate} | Codename: {APP_VERSION.codename}</p>
     </div>
   );
-};
+});

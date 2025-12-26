@@ -27,7 +27,7 @@ interface DetailedReviewSectionProps {
 
 type FilterType = 'ALL' | 'HIGH' | 'LOW' | 'FALLACY';
 
-export const DetailedReviewSection: React.FC<DetailedReviewSectionProps> = ({
+export const DetailedReviewSection: React.FC<DetailedReviewSectionProps> = React.memo(({
   feedback,
   messages,
   isDemoMode,
@@ -370,4 +370,4 @@ export const DetailedReviewSection: React.FC<DetailedReviewSectionProps> = ({
       </div>
     </div>
   );
-};
+});

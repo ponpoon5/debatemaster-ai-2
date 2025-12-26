@@ -10,7 +10,7 @@ interface TokenStatusProps {
   onShowSpecification?: () => void;
 }
 
-export const TokenStatus: React.FC<TokenStatusProps> = ({
+export const TokenStatus: React.FC<TokenStatusProps> = React.memo(({
   tokenUsage,
   archivesCount,
   onShowHistory,
@@ -92,4 +92,4 @@ export const TokenStatus: React.FC<TokenStatusProps> = ({
       </div>
     </>
   );
-};
+});

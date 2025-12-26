@@ -7,7 +7,7 @@ interface QuestioningCardProps {
   details: QuestionAnalysis[];
 }
 
-export const QuestioningCard: React.FC<QuestioningCardProps> = ({ stats, details }) => {
+export const QuestioningCard: React.FC<QuestioningCardProps> = React.memo(({ stats, details }) => {
   // スコアを10点満点にクリップ
   const clampedScore = Math.min(Math.max(stats.score, 0), 10);
 
@@ -119,4 +119,4 @@ export const QuestioningCard: React.FC<QuestioningCardProps> = ({ stats, details
       </div>
     </div>
   );
-};
+});

@@ -7,7 +7,7 @@ interface DifficultyCardsProps {
   setDifficulty: (diff: Difficulty) => void;
 }
 
-export const DifficultyCards: React.FC<DifficultyCardsProps> = ({ difficulty, setDifficulty }) => {
+export const DifficultyCards: React.FC<DifficultyCardsProps> = React.memo(({ difficulty, setDifficulty }) => {
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-3">
@@ -107,4 +107,4 @@ export const DifficultyCards: React.FC<DifficultyCardsProps> = ({ difficulty, se
       </div>
     </div>
   );
-};
+});

@@ -21,7 +21,7 @@ interface LogicSectionProps {
   }[];
 }
 
-export const LogicSection: React.FC<LogicSectionProps> = ({ logicAnalysis, messages = [] }) => {
+export const LogicSection: React.FC<LogicSectionProps> = React.memo(({ logicAnalysis, messages = [] }) => {
   const userEvaluations = messages
     .filter((m): m is AnalyzedMessage => m.role === 'user' && hasStructureAnalysis(m))
     .map(m => m.structureAnalysis);
@@ -126,4 +126,4 @@ export const LogicSection: React.FC<LogicSectionProps> = ({ logicAnalysis, messa
       </div>
     </div>
   );
-};
+});

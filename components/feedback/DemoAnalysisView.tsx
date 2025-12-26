@@ -18,7 +18,7 @@ interface DemoAnalysisViewProps {
   demo: DemoAnalysis;
 }
 
-export const DemoAnalysisView: React.FC<DemoAnalysisViewProps> = ({ demo }) => {
+export const DemoAnalysisView: React.FC<DemoAnalysisViewProps> = React.memo(({ demo }) => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Summary */}
@@ -218,4 +218,4 @@ export const DemoAnalysisView: React.FC<DemoAnalysisViewProps> = ({ demo }) => {
       </div>
     </div>
   );
-};
+});

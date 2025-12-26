@@ -13,7 +13,7 @@ interface StandardQuizViewProps {
   onNext: () => void;
 }
 
-export const StandardQuizView: React.FC<StandardQuizViewProps> = ({
+export const StandardQuizView: React.FC<StandardQuizViewProps> = React.memo(({
   problem,
   userAnswer,
   setUserAnswer,
@@ -88,4 +88,4 @@ export const StandardQuizView: React.FC<StandardQuizViewProps> = ({
       )}
     </div>
   );
-};
+});

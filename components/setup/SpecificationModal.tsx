@@ -32,7 +32,7 @@ interface SpecificationModalProps {
   onClose: () => void;
 }
 
-export const SpecificationModal: React.FC<SpecificationModalProps> = ({ isOpen, onClose }) => {
+export const SpecificationModal: React.FC<SpecificationModalProps> = React.memo(({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
@@ -327,4 +327,4 @@ export const SpecificationModal: React.FC<SpecificationModalProps> = ({ isOpen, 
       </div>
     </div>
   );
-};
+});

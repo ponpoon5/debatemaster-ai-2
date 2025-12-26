@@ -16,7 +16,7 @@ const WEIGHING_CRITERIA = [
   { label: 'Reversibility (可逆性)', value: 'Reversibility' },
 ];
 
-export const WeighingQuizView: React.FC<WeighingQuizViewProps> = ({
+export const WeighingQuizView: React.FC<WeighingQuizViewProps> = React.memo(({
   data,
   evaluationResult,
   onAnswer,
@@ -90,4 +90,4 @@ export const WeighingQuizView: React.FC<WeighingQuizViewProps> = ({
       )}
     </div>
   );
-};
+});

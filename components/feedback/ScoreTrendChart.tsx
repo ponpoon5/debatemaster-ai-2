@@ -17,7 +17,7 @@ function hasScoredReview(review: MessageReview): review is ScoredReview {
   return review.score !== undefined;
 }
 
-export const ScoreTrendChart: React.FC<ScoreTrendChartProps> = ({
+export const ScoreTrendChart: React.FC<ScoreTrendChartProps> = React.memo(({
   reviews,
   messages,
   onPointClick,
@@ -229,4 +229,4 @@ export const ScoreTrendChart: React.FC<ScoreTrendChartProps> = ({
       </div>
     </div>
   );
-};
+});

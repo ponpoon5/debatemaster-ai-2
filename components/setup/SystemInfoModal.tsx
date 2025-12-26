@@ -298,7 +298,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ name, type, children, level
   );
 };
 
-export const SystemInfoModal: React.FC<SystemInfoModalProps> = ({ isOpen, onClose }) => {
+export const SystemInfoModal: React.FC<SystemInfoModalProps> = React.memo(({ isOpen, onClose }) => {
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
@@ -483,4 +483,4 @@ ${fileTree}
       </div>
     </div>
   );
-};
+});

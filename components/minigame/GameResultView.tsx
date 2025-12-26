@@ -10,7 +10,7 @@ interface GameResultViewProps {
   onBack: () => void;
 }
 
-export const GameResultView: React.FC<GameResultViewProps> = ({
+export const GameResultView: React.FC<GameResultViewProps> = React.memo(({
   score,
   combo,
   rank,
@@ -76,4 +76,4 @@ export const GameResultView: React.FC<GameResultViewProps> = ({
       </div>
     </div>
   );
-};
+});

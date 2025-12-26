@@ -30,7 +30,7 @@ interface SummarySectionProps {
   onNavigate: (rec: TrainingRecommendation) => void;
 }
 
-export const SummarySection: React.FC<SummarySectionProps> = ({
+export const SummarySection: React.FC<SummarySectionProps> = React.memo(({
   feedback,
   tokenUsage,
   isArchiveView,
@@ -315,4 +315,4 @@ export const SummarySection: React.FC<SummarySectionProps> = ({
       )}
     </div>
   );
-};
+});

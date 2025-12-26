@@ -15,7 +15,7 @@ interface TopicInputProps {
   onShuffleSuggestions: () => void;
 }
 
-export const TopicInput: React.FC<TopicInputProps> = ({
+export const TopicInput: React.FC<TopicInputProps> = React.memo(({
   topic,
   setTopic,
   activeMode,
@@ -134,4 +134,4 @@ export const TopicInput: React.FC<TopicInputProps> = ({
       </div>
     </div>
   );
-};
+});

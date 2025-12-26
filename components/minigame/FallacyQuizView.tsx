@@ -6,7 +6,7 @@ interface FallacyQuizViewProps {
   onSubmit: (selectedIndex: number) => void;
 }
 
-export const FallacyQuizView: React.FC<FallacyQuizViewProps> = ({ data, onSubmit }) => {
+export const FallacyQuizView: React.FC<FallacyQuizViewProps> = React.memo(({ data, onSubmit }) => {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
 
   useEffect(() => {
@@ -49,4 +49,4 @@ export const FallacyQuizView: React.FC<FallacyQuizViewProps> = ({ data, onSubmit
       </div>
     </div>
   );
-};
+});

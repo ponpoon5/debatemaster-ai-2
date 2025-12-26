@@ -18,7 +18,7 @@ interface ModeGridProps {
   onSelectMode: (mode: DebateMode) => void;
 }
 
-export const ModeGrid: React.FC<ModeGridProps> = ({ activeMode, onSelectMode }) => {
+export const ModeGrid: React.FC<ModeGridProps> = React.memo(({ activeMode, onSelectMode }) => {
   const modes = [
     { mode: DebateMode.DEBATE, label: '議論実践', icon: Swords, color: 'text-blue-600' },
     { mode: DebateMode.TEXTBOOK, label: '教科書', icon: Book, color: 'text-emerald-600' },
@@ -55,4 +55,4 @@ export const ModeGrid: React.FC<ModeGridProps> = ({ activeMode, onSelectMode }) 
       ))}
     </div>
   );
-};
+});

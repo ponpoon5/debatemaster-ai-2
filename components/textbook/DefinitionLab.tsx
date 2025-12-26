@@ -8,7 +8,7 @@ interface DefinitionLabProps {
   onTokenUpdate: (usage: TokenUsage) => void;
 }
 
-export const DefinitionLab: React.FC<DefinitionLabProps> = ({ onTokenUpdate }) => {
+export const DefinitionLab: React.FC<DefinitionLabProps> = React.memo(({ onTokenUpdate }) => {
   const [defState, setDefState] = useState({ word: '', definition: '' });
   const [defResult, setDefResult] = useState<DefinitionLabResult | null>(null);
   const [isLabLoading, setIsLabLoading] = useState(false);
@@ -87,4 +87,4 @@ export const DefinitionLab: React.FC<DefinitionLabProps> = ({ onTokenUpdate }) =
       )}
     </div>
   );
-};
+});
