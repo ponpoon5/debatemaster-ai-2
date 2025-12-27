@@ -6,11 +6,11 @@
 export const APP_VERSION = {
   major: 5,
   minor: 0,
-  patch: 0,
-  full: '5.0.0',
+  patch: 1,
+  full: '5.0.1',
   name: 'DebateMaster AI',
-  displayName: 'DebateMaster AI vv5.0.0',
-  releaseDate: '2025-12-26',
+  displayName: 'DebateMaster AI vv5.0.1',
+  releaseDate: '2025-12-27',
   codename: 'Quality Assured',
 } as const;
 

@@ -201,7 +201,7 @@ export const useDebateSession = ({
             role: 'model',
             text: text,
           };
-          setMessages([aiMsg]);
+          setMessages((prev) => [...prev, aiMsg]);
 
           if (response.usageMetadata) {
             updateTokenUsage({

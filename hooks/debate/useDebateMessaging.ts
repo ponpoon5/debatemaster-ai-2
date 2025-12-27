@@ -57,9 +57,10 @@ export const useDebateMessaging = ({
         let lastUsage: TokenUsage | undefined;
 
         // 送信成功時、ユーザーメッセージのpendingフラグを削除
+        // Note: IDは変更せず、tempUserIdのまま維持（構造分析との整合性のため）
         setMessages(prev =>
           prev.map(msg =>
-            msg.id === tempUserId ? { ...msg, id: Date.now().toString(), isPending: false } : msg
+            msg.id === tempUserId ? { ...msg, isPending: false } : msg
           )
         );
 
