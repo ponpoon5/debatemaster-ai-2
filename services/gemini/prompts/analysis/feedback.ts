@@ -97,7 +97,19 @@ export const getFeedbackPrompt = (
        logic, evidence, rebuttal, persuasion, consistency, constructiveness, objectivity, clarity (各10点満点)
     4. 分析的ルーブリック詳細 (rubricDetails)
     5. 行動メトリクス測定 (sessionMetrics)
-    6. トレーニング推奨 (TrainingRecommendations)
+    6. トレーニング推奨 (trainingRecommendations)
+       - ユーザーの弱点に基づいて、具体的なトレーニングを推奨してください（最大2つ）。
+       - **actionType と actionPayload を正しく設定してください**:
+         * actionType='open_minigame' の場合:
+           - minigameType は以下のいずれか必須: EVIDENCE_FILL（根拠穴埋め）, FALLACY_QUIZ（誤謬クイズ）, ISSUE_PUZZLE（論点パズル）, COMBO_REBUTTAL（連続反駁）, FERMI_ESTIMATION（フェルミ推定）, LATERAL_THINKING（水平思考）, ACTIVE_INOCULATION（予防接種）
+         * actionType='open_textbook' の場合:
+           - textbookChapterId に章番号（1-6）を設定
+         * actionType='open_thinking_gym' の場合:
+           - thinkingFramework は以下のいずれか: toulmin（トゥールミンモデル）, premise_check（前提チェック）, issue_analysis（論点分析）
+         * actionType='start_drill' の場合:
+           - drillTopic に練習テーマを設定
+         * actionType='start_study' の場合:
+           - studyTopic に学習テーマ（誤謬名など）を設定
     7. 論理構造分析 (logicAnalysis): 議論全体の核心的な論理を抽出。
     8. 質問力分析 (questioningAnalysis): 検出された全ての質問を評価。
 

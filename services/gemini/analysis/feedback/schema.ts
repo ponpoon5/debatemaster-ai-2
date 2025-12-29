@@ -76,9 +76,23 @@ export const trainingRecommendationSchema: Schema = {
     actionPayload: {
       type: Type.OBJECT,
       properties: {
-        minigameType: { type: Type.STRING },
+        minigameType: {
+          type: Type.STRING,
+          enum: [
+            'EVIDENCE_FILL',
+            'FALLACY_QUIZ',
+            'ISSUE_PUZZLE',
+            'COMBO_REBUTTAL',
+            'FERMI_ESTIMATION',
+            'LATERAL_THINKING',
+            'ACTIVE_INOCULATION',
+          ],
+        },
         textbookChapterId: { type: Type.INTEGER },
-        thinkingFramework: { type: Type.STRING },
+        thinkingFramework: {
+          type: Type.STRING,
+          enum: ['toulmin', 'premise_check', 'issue_analysis'],
+        },
         drillTopic: { type: Type.STRING },
         studyTopic: { type: Type.STRING },
       },
