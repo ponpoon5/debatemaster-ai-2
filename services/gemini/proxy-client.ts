@@ -18,7 +18,14 @@ const PROXY_URL = import.meta.env.VITE_PROXY_URL || '';
  * 非ストリーミングでコンテンツを生成
  */
 export async function generateContentViaProxy(params: GeminiGenerateContentParams): Promise<ProxyApiResponse> {
-  const response = await fetch(`${PROXY_URL}/api/gemini/generate`, {
+  if (!PROXY_URL) {
+    throw new Error('PROXY_URL is not configured. Cannot use proxy mode.');
+  }
+
+  const url = `${PROXY_URL}/api/gemini/generate`;
+  console.log('📡 Proxy request to:', url);
+
+  const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -40,7 +47,14 @@ export async function generateContentViaProxy(params: GeminiGenerateContentParam
 export async function* generateContentStreamViaProxy(
   params: GeminiGenerateContentParams
 ): AsyncGenerator<GeminiStreamChunk> {
-  yield* streamFromProxy(`${PROXY_URL}/api/gemini/generate-stream`, params);
+  if (!PROXY_URL) {
+    throw new Error('PROXY_URL is not configured. Cannot use proxy mode.');
+  }
+
+  const url = `${PROXY_URL}/api/gemini/generate-stream`;
+  console.log('📡 Proxy stream request to:', url);
+
+  yield* streamFromProxy(url, params);
 }
 
 interface ChatStreamParams {
@@ -61,13 +75,25 @@ interface ChatStreamParams {
 export async function* sendChatMessageStreamViaProxy(
   params: ChatStreamParams
 ): AsyncGenerator<GeminiStreamChunk> {
-  yield* streamFromProxy(`${PROXY_URL}/api/gemini/chat-stream`, params);
+  if (!PROXY_URL) {
+    throw new Error('PROXY_URL is not configured. Cannot use proxy mode.');
+  }
+
+  const url = `${PROXY_URL}/api/gemini/chat-stream`;
+  console.log('📡 Proxy chat stream request to:', url);
+
+  yield* streamFromProxy(url, params);
 }
 
 /**
  * プロキシサーバーのヘルスチェック
  */
 export async function checkProxyHealth(): Promise<boolean> {
+  if (!PROXY_URL) {
+    console.warn('⚠️ PROXY_URL is not configured. Health check skipped.');
+    return false;
+  }
+
   try {
     const response = await fetch(`${PROXY_URL}/api/health`);
     return response.ok;

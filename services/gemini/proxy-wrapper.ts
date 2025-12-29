@@ -340,3 +340,10 @@ export const ai = new AIClientWrapper();
 console.log('🔧 AI Client Mode:', USE_PROXY ? 'PROXY' : 'DIRECT');
 console.log('🔧 API_KEY exists:', !!API_KEY);
 console.log('🔧 PROXY_URL:', PROXY_URL);
+
+// バリデーション: USE_PROXY が true なのに PROXY_URL が空の場合は警告
+if (USE_PROXY && !PROXY_URL) {
+  console.error('⚠️ USE_PROXY is true but PROXY_URL is empty');
+  console.error('⚠️ This will cause SSL errors. Please set VITE_PROXY_URL in .env.local');
+  console.warn('⚠️ Recommendation: Either set VITE_PROXY_URL or ensure USE_PROXY is false');
+}

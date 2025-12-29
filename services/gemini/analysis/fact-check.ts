@@ -49,7 +49,13 @@ export const analyzeFactOpinion = async (
     throw new Error('No text response');
   } catch (error) {
     const apiError = parseApiError(error);
-    console.error('Fact-check analysis failed:', apiError);
+    console.error('Fact-check analysis failed:', apiError.message || apiError);
+    console.error('Error details:', {
+      code: apiError.code,
+      message: apiError.message,
+      status: apiError.status,
+      details: apiError.details,
+    });
     return {
       analysis: { segments: [{ text, type: 'neutral' }], factRatio: 0, opinionRatio: 0 },
       usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
