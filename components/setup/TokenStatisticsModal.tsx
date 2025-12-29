@@ -6,16 +6,29 @@ import {
   formatTokenCount,
   formatCost,
 } from '../../core/utils/token-statistics';
+import { Line } from 'react-chartjs-2';
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip as ChartTooltip,
   Legend,
-} from 'recharts';
+  ChartOptions,
+} from 'chart.js';
+
+// Register Chart.js components
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  ChartTooltip,
+  Legend
+);
 
 interface TokenStatisticsModalProps {
   isOpen: boolean;
@@ -34,22 +47,54 @@ export const TokenStatisticsModal: React.FC<TokenStatisticsModalProps> = ({
 
   const statistics = useMemo(() => calculateTokenStatistics(archives), [archives]);
 
-  // グラフ用データの準備
+  // Chart.js用データの準備
   const chartData = useMemo(() => {
-    return statistics.sessionBreakdown
-      .slice()
-      .reverse() // 時系列順（古い→新しい）
-      .map(session => ({
-        date: new Date(session.date).toLocaleDateString('ja-JP', {
+    const sessions = statistics.sessionBreakdown.slice().reverse(); // 時系列順（古い→新しい）
+
+    return {
+      labels: sessions.map(session =>
+        new Date(session.date).toLocaleDateString('ja-JP', {
           month: 'short',
           day: 'numeric',
-        }),
-        input: session.usage.inputTokens,
-        output: session.usage.outputTokens,
-        total: session.usage.totalTokens,
-        topic: session.topic,
-      }));
+        })
+      ),
+      datasets: [
+        {
+          label: 'Input Tokens',
+          data: sessions.map(s => s.usage.inputTokens),
+          borderColor: 'rgb(59, 130, 246)',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          tension: 0.3,
+        },
+        {
+          label: 'Output Tokens',
+          data: sessions.map(s => s.usage.outputTokens),
+          borderColor: 'rgb(168, 85, 247)',
+          backgroundColor: 'rgba(168, 85, 247, 0.1)',
+          tension: 0.3,
+        },
+      ],
+    };
   }, [statistics.sessionBreakdown]);
+
+  const chartOptions: ChartOptions<'line'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+      },
+      tooltip: {
+        mode: 'index',
+        intersect: false,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
 
   // ソート処理
   const sortedSessions = useMemo(() => {
@@ -150,68 +195,9 @@ export const TokenStatisticsModal: React.FC<TokenStatisticsModalProps> = ({
               {/* Chart Section */}
               <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">トークン使用量の推移</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis
-                      dataKey="date"
-                      stroke="#6b7280"
-                      style={{ fontSize: '12px' }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                    />
-                    <YAxis stroke="#6b7280" style={{ fontSize: '12px' }} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                        border: '1px solid #e5e7eb',
-                        borderRadius: '8px',
-                        padding: '12px',
-                      }}
-                      formatter={(value: number, name: string) => {
-                        const labels: Record<string, string> = {
-                          input: 'Input Tokens',
-                          output: 'Output Tokens',
-                          total: 'Total Tokens',
-                        };
-                        return [formatTokenCount(value), labels[name] || name];
-                      }}
-                      labelFormatter={(label, payload) => {
-                        if (payload && payload[0]) {
-                          return `${label} - ${payload[0].payload.topic}`;
-                        }
-                        return label;
-                      }}
-                    />
-                    <Legend
-                      wrapperStyle={{ paddingTop: '20px' }}
-                      formatter={(value: string) => {
-                        const labels: Record<string, string> = {
-                          input: 'Input Tokens',
-                          output: 'Output Tokens',
-                        };
-                        return labels[value] || value;
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="input"
-                      stroke="#3b82f6"
-                      strokeWidth={2}
-                      dot={{ fill: '#3b82f6', r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="output"
-                      stroke="#a855f7"
-                      strokeWidth={2}
-                      dot={{ fill: '#a855f7', r: 4 }}
-                      activeDot={{ r: 6 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div style={{ height: '300px' }}>
+                  <Line data={chartData} options={chartOptions} />
+                </div>
               </div>
 
               {/* Sort Buttons */}

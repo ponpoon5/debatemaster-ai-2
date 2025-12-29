@@ -52,7 +52,8 @@
       "Bash(tail:*)",
       "Bash(dir:*)",
       "Bash(git tag:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(cd:*)"
     ]
   }
 }
