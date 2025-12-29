@@ -200,12 +200,20 @@ export const generateMiniGameContent = async <T = unknown>(
     });
     const usage = extractUsage(response);
     if (response.text) {
-      return { data: JSON.parse(cleanText(response.text)), usage };
+      const cleaned = cleanText(response.text);
+      try {
+        return { data: JSON.parse(cleaned), usage };
+      } catch (parseError) {
+        console.error(`❌ JSON Parse Error for ${gameType}:`, parseError);
+        console.error('📝 Cleaned text:', cleaned);
+        console.error('📄 Original text:', response.text);
+        throw parseError;
+      }
     }
     throw new Error('No text');
   } catch (error) {
     const apiError = parseApiError(error);
-    console.error('Mini game content generation failed:', apiError);
+    console.error(`Mini game content generation failed (${gameType}):`, apiError);
     return { data: null, usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 } };
   }
 };
@@ -313,12 +321,20 @@ export const evaluateMiniGameAnswer = async (
     });
     const usage = extractUsage(response);
     if (response.text) {
-      return { ...JSON.parse(cleanText(response.text)), usage };
+      const cleaned = cleanText(response.text);
+      try {
+        return { ...JSON.parse(cleaned), usage };
+      } catch (parseError) {
+        console.error(`❌ JSON Parse Error for ${gameType} evaluation:`, parseError);
+        console.error('📝 Cleaned text:', cleaned);
+        console.error('📄 Original text:', response.text);
+        throw parseError;
+      }
     }
     throw new Error('No text');
   } catch (error) {
     const apiError = parseApiError(error);
-    console.error('Mini game answer evaluation failed:', apiError);
+    console.error(`Mini game answer evaluation failed (${gameType}):`, apiError);
     return {
       score: 0,
       feedback: 'Error',
