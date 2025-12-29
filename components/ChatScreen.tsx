@@ -502,6 +502,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         isOpen={showFiveWhysModal}
         onClose={() => setShowFiveWhysModal(false)}
         onSend={handleModalSend}
+        lastAiMessage={lastAiMessage}
       />
 
       <SummaryModal

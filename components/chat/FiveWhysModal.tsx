@@ -13,6 +13,7 @@ interface FiveWhysModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSend: (text: string) => void;
+  lastAiMessage?: string; // AI生成問題の検出用
 }
 
 type Tab = 'ai_topic' | 'custom_topic';
@@ -36,17 +37,34 @@ export const FiveWhysModal: React.FC<FiveWhysModalProps> = ({
   isOpen,
   onClose,
   onSend,
+  lastAiMessage,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>('ai_topic');
   const [customProblem, setCustomProblem] = useState('');
   const [showDetailedInput, setShowDetailedInput] = useState(false);
   const [currentProblem, setCurrentProblem] = useState('');
+  const [waitingForAiProblem, setWaitingForAiProblem] = useState(false);
 
   if (!isOpen) return null;
 
+  // AI生成問題の検出と自動遷移
+  React.useEffect(() => {
+    if (waitingForAiProblem && lastAiMessage) {
+      // [Problem] を抽出
+      const problemMatch = lastAiMessage.match(/\[Problem\]\s*(.+?)(?:\n|$)/i);
+      if (problemMatch) {
+        const extractedProblem = problemMatch[1].trim();
+        setCurrentProblem(extractedProblem);
+        setShowDetailedInput(true);
+        setWaitingForAiProblem(false);
+      }
+    }
+  }, [lastAiMessage, waitingForAiProblem]);
+
   const handleRequestAiTopic = () => {
+    setWaitingForAiProblem(true);
     onSend('課題の自動作成をお願いします。');
-    onClose();
+    // モーダルは閉じない！
   };
 
   const handleStartCustomProblem = () => {
@@ -94,17 +112,30 @@ export const FiveWhysModal: React.FC<FiveWhysModalProps> = ({
     }
 
     onSend(message);
-    onClose();
 
     // Reset state
     setShowDetailedInput(false);
     setCustomProblem('');
     setCurrentProblem('');
+    setWaitingForAiProblem(false);
+    setActiveTab('ai_topic');
+
+    onClose();
   };
 
   const handleBack = () => {
     setShowDetailedInput(false);
     setCurrentProblem('');
+  };
+
+  const handleClose = () => {
+    // 状態をリセット
+    setShowDetailedInput(false);
+    setCustomProblem('');
+    setCurrentProblem('');
+    setWaitingForAiProblem(false);
+    setActiveTab('ai_topic');
+    onClose();
   };
 
   return (
@@ -122,7 +153,7 @@ export const FiveWhysModal: React.FC<FiveWhysModalProps> = ({
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
           >
             <X size={24} className="text-slate-400" />
@@ -131,7 +162,13 @@ export const FiveWhysModal: React.FC<FiveWhysModalProps> = ({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {!showDetailedInput ? (
+          {waitingForAiProblem ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
+              <p className="text-slate-600 font-bold">AIが課題を生成中...</p>
+              <p className="text-sm text-slate-400 mt-2">問題が生成されたら自動的に入力フォームに進みます</p>
+            </div>
+          ) : !showDetailedInput ? (
             <>
               {/* Tab Selection */}
               <div className="flex gap-2 mb-6">
