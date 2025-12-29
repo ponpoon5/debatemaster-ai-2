@@ -1,4 +1,5 @@
 import { useCallback, MutableRefObject } from 'react';
+import { flushSync } from 'react-dom';
 import { Message, TokenUsage } from '../../core/types';
 import { Chat } from '@google/genai';
 import { cleanText } from '../../services/gemini/index';
@@ -92,7 +93,10 @@ export const useDebateMessaging = ({
         // エラー時はロールバック: 楽観的に追加したメッセージとAIプレースホルダーを削除
         setMessages(prev => prev.filter(msg => msg.id !== tempUserId && msg.id !== aiMsgId));
       } finally {
-        setIsSending(false);
+        // 不安定なネットワーク環境でのUI更新遅延を防ぐため、flushSyncで同期的に状態を更新
+        flushSync(() => {
+          setIsSending(false);
+        });
       }
     },
     [chatRef, setMessages, setIsSending, updateTokenUsage, handleError]
