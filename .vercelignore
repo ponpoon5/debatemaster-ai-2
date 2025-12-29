@@ -1,0 +1,35 @@
+# Vercelデプロイから除外するファイル
+
+# ローカルビルド成果物（Vercelが独自にビルドするため不要）
+dist/
+
+# ローカル開発用サーバー
+server/
+
+# テストファイル
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# 環境変数ファイル
+.env
+.env.local
+.env.*.local
+
+# Node modules（Vercelが自動インストールするため）
+node_modules/
+
+# ログファイル
+*.log
+npm-debug.log*
+
+# エディタ設定
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS固有ファイル
+.DS_Store
+Thumbs.db
