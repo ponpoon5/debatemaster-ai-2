@@ -37,9 +37,6 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
 
   const { analyzeAxisApproval } = useMECEAnalyzer();
 
-  // デバッグ: モーダルが再レンダリングされているか確認
-  console.log('🔄 ThinkingGymModal rendered - lastAiMessage:', lastAiMessage?.substring(0, 100), 'waitingForAxisApproval:', waitingForAxisApproval);
-
   // MECE: AI応答を監視して軸承認を判定
   useEffect(() => {
     if (
@@ -48,16 +45,11 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
       lastAiMessage &&
       lastSubmittedAxis
     ) {
-      console.log('🔍 MECE Axis Check - AI Response:', lastAiMessage.substring(0, 200));
       const isApproved = analyzeAxisApproval(lastAiMessage);
-      console.log('🔍 MECE Axis Check - Is Approved:', isApproved);
       if (isApproved) {
-        console.log('✅ MECE Axis Approved! Setting state...');
         setMeceAxisApproved(true);
         setMeceCurrentAxis(lastSubmittedAxis);
         setWaitingForAxisApproval(false);
-      } else {
-        console.log('❌ MECE Axis Rejected');
       }
     }
   }, [lastAiMessage, framework, waitingForAxisApproval, lastSubmittedAxis, analyzeAxisApproval]);
@@ -83,10 +75,8 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
   // MECE: Handle axis submission
   const handleMeceAxisSubmit = (axis: string) => {
     const message = `[MECE_AXIS_CHECK] 軸: ${axis}`;
-    console.log('📤 MECE Axis Submit:', axis);
     setLastSubmittedAxis(axis);
     setWaitingForAxisApproval(true);
-    console.log('🔄 Set waitingForAxisApproval = true');
     onSend(message);
     // モーダルは閉じない！AI応答を待つ
   };

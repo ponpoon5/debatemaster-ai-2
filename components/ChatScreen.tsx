@@ -143,7 +143,6 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
   const lastAiMessage = useMemo(() => {
     const aiMessages = messages.filter(m => m.role === 'model');
     const lastMsg = aiMessages[aiMessages.length - 1];
-    console.log('🔄 ChatScreen: lastAiMessage updated, length:', aiMessages.length, 'content:', lastMsg?.text?.substring(0, 100));
     return lastMsg?.text;
   }, [messages]);
 
