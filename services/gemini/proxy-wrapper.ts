@@ -207,7 +207,7 @@ class AIClientWrapper {
                 // 履歴に追加（ユーザーメッセージとAIレスポンス）
                 accumulatedHistory = [
                   ...accumulatedHistory,
-                  { role: 'user', parts: [{ text: message.message }] },
+                  { role: 'user', parts: [{ text: params.message }] },
                   { role: 'model', parts: [{ text: data.text }] },
                 ];
 
@@ -264,7 +264,7 @@ class AIClientWrapper {
                           if (fullText) {
                             accumulatedHistory = [
                               ...accumulatedHistory,
-                              { role: 'user', parts: [{ text: message.message }] },
+                              { role: 'user', parts: [{ text: params.message }] },
                               { role: 'model', parts: [{ text: fullText }] },
                             ];
                           }
