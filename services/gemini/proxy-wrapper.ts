@@ -23,7 +23,9 @@ class ProxyAIClient {
     const { model, contents, config } = params;
 
     return withRetry(async () => {
-      const response = await fetch(`${PROXY_URL}/api/gemini/generate`, {
+      // PROXY_URLが空の場合は相対パス（同一ドメイン）を使用
+      const url = PROXY_URL ? `${PROXY_URL}/api/gemini/generate` : '/api/gemini/generate';
+      const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,7 +54,9 @@ class ProxyAIClient {
 
   async *generateContentStream(params: GeminiGenerateContentParams): AsyncGenerator<GeminiStreamChunk> {
     const { model, contents, config } = params;
-    yield* streamFromProxy(`${PROXY_URL}/api/gemini/generate-stream`, { model, contents, config });
+    // PROXY_URLが空の場合は相対パス（同一ドメイン）を使用
+    const url = PROXY_URL ? `${PROXY_URL}/api/gemini/generate-stream` : '/api/gemini/generate-stream';
+    yield* streamFromProxy(url, { model, contents, config });
   }
 }
 
@@ -138,7 +142,8 @@ class AIClientWrapper {
       return {
         generateContent: async (params: { contents: unknown; generationConfig?: unknown; config?: unknown }) => {
           return withRetry(async () => {
-            const response = await fetch(`${PROXY_URL}/api/gemini/generate`, {
+            const url = PROXY_URL ? `${PROXY_URL}/api/gemini/generate` : '/api/gemini/generate';
+            const response = await fetch(url, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -178,7 +183,8 @@ class AIClientWrapper {
           return {
             sendMessage: async (message: { message: string }) => {
               return withRetry(async () => {
-                const response = await fetch(`${PROXY_URL}/api/gemini/chat`, {
+                const url = PROXY_URL ? `${PROXY_URL}/api/gemini/chat` : '/api/gemini/chat';
+                const response = await fetch(url, {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -216,7 +222,8 @@ class AIClientWrapper {
               });
             },
             sendMessageStream: async (message: { message: string }) => {
-              const response = await fetch(`${PROXY_URL}/api/gemini/chat-stream`, {
+              const url = PROXY_URL ? `${PROXY_URL}/api/gemini/chat-stream` : '/api/gemini/chat-stream';
+              const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -341,9 +348,7 @@ console.log('🔧 AI Client Mode:', USE_PROXY ? 'PROXY' : 'DIRECT');
 console.log('🔧 API_KEY exists:', !!API_KEY);
 console.log('🔧 PROXY_URL:', PROXY_URL);
 
-// バリデーション: USE_PROXY が true なのに PROXY_URL が空の場合は警告
+// PROXY_URLが空の場合は同一ドメインの /api を使用（Vercel等）
 if (USE_PROXY && !PROXY_URL) {
-  console.error('⚠️ USE_PROXY is true but PROXY_URL is empty');
-  console.error('⚠️ This will cause SSL errors. Please set VITE_PROXY_URL in .env.local');
-  console.warn('⚠️ Recommendation: Either set VITE_PROXY_URL or ensure USE_PROXY is false');
+  console.log('ℹ️ PROXY_URL is empty, using same-origin /api endpoints (Vercel mode)');
 }
