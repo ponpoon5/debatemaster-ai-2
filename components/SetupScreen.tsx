@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, lazy, Suspense } from 'react';
 import {
   DebateSettings,
   TokenUsage,
@@ -40,7 +40,13 @@ import { DebateTypeCards } from './setup/DebateTypeCards';
 import { ModeSettings } from './setup/ModeSettings';
 import { SystemInfoModal } from './setup/SystemInfoModal';
 import { SpecificationModal } from './setup/SpecificationModal';
-import { TokenStatisticsModal } from './setup/TokenStatisticsModal';
+
+// Lazy load TokenStatisticsModal to avoid loading Recharts on initial page load
+const TokenStatisticsModal = lazy(() =>
+  import('./setup/TokenStatisticsModal').then(module => ({
+    default: module.TokenStatisticsModal,
+  }))
+);
 
 interface SetupScreenProps {
   onStart: (settings: DebateSettings) => void;
@@ -587,11 +593,15 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
 
       <SpecificationModal isOpen={showSpecification} onClose={() => setShowSpecification(false)} />
 
-      <TokenStatisticsModal
-        isOpen={showTokenStatistics}
-        onClose={() => setShowTokenStatistics(false)}
-        archives={archives}
-      />
+      {showTokenStatistics && (
+        <Suspense fallback={null}>
+          <TokenStatisticsModal
+            isOpen={showTokenStatistics}
+            onClose={() => setShowTokenStatistics(false)}
+            archives={archives}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };
