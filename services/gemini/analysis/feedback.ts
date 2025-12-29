@@ -98,7 +98,7 @@ export const generateFeedback = async (
 export const generateFeedbackStreaming = async (
   settings: DebateSettings,
   history: Message[],
-  onProgress?: (partialText: string) => void
+  onProgress?: (progress: number) => void // 変更: 進捗パーセンテージ（0-100）を渡す
 ): Promise<{ data: FeedbackData; usage: TokenUsage }> => {
   const transcript = history
     .map((msg, index) => `[ID:${index}] ${msg.role === 'user' ? 'User' : 'AI'}: ${msg.text}`)
@@ -112,6 +112,9 @@ export const generateFeedbackStreaming = async (
   const prompt = getFeedbackPrompt(topic, isStoryMode, isDemoMode, transcript, isFacilitationMode);
 
   try {
+    // 推定される最終テキスト長（経験的に約3000-5000文字）
+    const estimatedFinalLength = Math.max(3000, history.length * 300);
+
     const result = await streamJsonContent<FeedbackData>(
       {
         model: MODEL_NAME,
@@ -121,8 +124,17 @@ export const generateFeedbackStreaming = async (
           responseSchema: feedbackSchema,
         },
       },
-      onProgress
+      (partialText) => {
+        // 部分テキスト長から進捗を計算（70-100%の範囲）
+        const currentLength = partialText.length;
+        const ratio = Math.min(currentLength / estimatedFinalLength, 1);
+        const streamProgress = 70 + ratio * 30;
+        onProgress?.(Math.min(streamProgress, 100));
+      }
     );
+
+    // 最終的に100%に設定
+    onProgress?.(100);
 
     return result;
   } catch (error) {

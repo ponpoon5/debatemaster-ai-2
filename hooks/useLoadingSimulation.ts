@@ -22,13 +22,18 @@ export const useLoadingSimulation = (isLoading: boolean, complexityFactor: numbe
 
       const updateInterval = 100;
       const totalUpdates = (estimated * 1000) / updateInterval;
-      const incrementPerUpdate = 95 / totalUpdates;
+      // 変更: 95 → 70 に変更（初期段階は70%まで）
+      const incrementPerUpdate = 70 / totalUpdates;
 
       progressInterval = setInterval(() => {
         setProgress(prev => {
-          if (prev >= 95) return Math.min(prev + 0.05, 99);
+          // 変更: 70%以上の場合は進捗を止める（ストリーミング進捗に任せる）
+          if (prev >= 70) {
+            clearInterval(progressInterval);
+            return prev;
+          }
           const randomFactor = 0.5 + Math.random();
-          return Math.min(prev + incrementPerUpdate * randomFactor, 95);
+          return Math.min(prev + incrementPerUpdate * randomFactor, 70);
         });
       }, updateInterval);
 
@@ -57,5 +62,6 @@ export const useLoadingSimulation = (isLoading: boolean, complexityFactor: numbe
     estimatedSeconds,
     elapsedSeconds,
     currentTip: LOADING_TIPS[currentTipIndex],
+    setProgress, // 新規追加: 外部から進捗を設定可能に
   };
 };

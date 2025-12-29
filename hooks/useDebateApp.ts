@@ -61,7 +61,7 @@ export const useDebateApp = () => {
   // Backup/Restore functionality
   const { exportData, importData } = useBackupRestore(backupState, setBackupState);
 
-  const { progress, estimatedSeconds, elapsedSeconds, currentTip } = useLoadingSimulation(
+  const { progress, estimatedSeconds, elapsedSeconds, currentTip, setProgress } = useLoadingSimulation(
     isLoadingFeedback,
     messages.length
   );
@@ -111,6 +111,7 @@ export const useDebateApp = () => {
     addArchive,
     handleError,
     tokenUsage,
+    setLoadingProgress: setProgress, // 新規追加
   });
 
   // --- Actions (delegated to specialized hooks) ---

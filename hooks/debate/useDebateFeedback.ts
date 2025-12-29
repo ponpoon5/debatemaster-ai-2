@@ -31,6 +31,7 @@ interface UseDebateFeedbackParams {
   addArchive: (archive: DebateArchive, settings: DebateSettings) => void;
   handleError: (error: unknown, context?: string) => void;
   tokenUsage: TokenUsage;
+  setLoadingProgress?: (progress: number) => void; // 新規追加
 }
 
 export const useDebateFeedback = ({
@@ -43,6 +44,7 @@ export const useDebateFeedback = ({
   addArchive,
   handleError,
   tokenUsage,
+  setLoadingProgress, // 新規追加
 }: UseDebateFeedbackParams) => {
   const handleEndDebate = useCallback(async () => {
     if (!settings) return;
@@ -50,9 +52,9 @@ export const useDebateFeedback = ({
     try {
       // ストリーミングでフィードバックを生成（進捗コールバック付き）
       const result = await withMinLoadingTime(
-        generateFeedbackStreaming(settings, messages, (partialText) => {
-          // 進捗を監視（将来的にプログレスバーなどに使用可能）
-          console.log(`Feedback generation progress: ${partialText.length} chars`);
+        generateFeedbackStreaming(settings, messages, (progress) => {
+          // 変更: 進捗パーセンテージを更新
+          setLoadingProgress?.(progress);
         }),
         MIN_LOADING_TIME_MS
       );
@@ -89,6 +91,7 @@ export const useDebateFeedback = ({
     addArchive,
     handleError,
     tokenUsage,
+    setLoadingProgress, // 新規追加
   ]);
 
   return {
