@@ -44,6 +44,9 @@ export interface GeminiGenerationConfig {
   responseMimeType?: string;
   responseSchema?: unknown;
   stopSequences?: string[];
+  thinkingConfig?: {
+    mode: 'THINKING_MODE_UNSPECIFIED' | 'DISABLED' | 'ENABLED_SHOW' | 'ENABLED_HIDE' | 'ENABLED_REGENERATE';
+  };
 }
 
 /**
