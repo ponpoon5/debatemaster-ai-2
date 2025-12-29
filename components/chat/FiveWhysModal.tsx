@@ -45,8 +45,6 @@ export const FiveWhysModal: React.FC<FiveWhysModalProps> = ({
   const [currentProblem, setCurrentProblem] = useState('');
   const [waitingForAiProblem, setWaitingForAiProblem] = useState(false);
 
-  if (!isOpen) return null;
-
   // AI生成問題の検出と自動遷移
   React.useEffect(() => {
     if (waitingForAiProblem && lastAiMessage) {
@@ -60,6 +58,8 @@ export const FiveWhysModal: React.FC<FiveWhysModalProps> = ({
       }
     }
   }, [lastAiMessage, waitingForAiProblem]);
+
+  if (!isOpen) return null;
 
   const handleRequestAiTopic = () => {
     setWaitingForAiProblem(true);
