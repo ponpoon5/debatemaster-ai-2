@@ -181,7 +181,7 @@ class AIClientWrapper {
           let accumulatedHistory = chatParams.history || [];
 
           return {
-            sendMessage: async (message: { message: string }) => {
+            sendMessage: async (message: string) => {
               return withRetry(async () => {
                 const url = PROXY_URL ? `${PROXY_URL}/api/gemini/chat` : '/api/gemini/chat';
                 const response = await fetch(url, {
@@ -192,7 +192,7 @@ class AIClientWrapper {
                   body: JSON.stringify({
                     model: config.model,
                     history: accumulatedHistory,
-                    message: message.message,
+                    message: message,
                     config: chatParams.generationConfig,
                   }),
                 });
@@ -221,7 +221,7 @@ class AIClientWrapper {
                 };
               });
             },
-            sendMessageStream: async (message: { message: string }) => {
+            sendMessageStream: async (message: string) => {
               const url = PROXY_URL ? `${PROXY_URL}/api/gemini/chat-stream` : '/api/gemini/chat-stream';
               const response = await fetch(url, {
                 method: 'POST',
@@ -231,7 +231,7 @@ class AIClientWrapper {
                 body: JSON.stringify({
                   model: config.model,
                   history: accumulatedHistory,
-                  message: message.message,
+                  message: message,
                   config: chatParams.generationConfig,
                 }),
               });
