@@ -113,13 +113,8 @@ export const FiveWhysModal: React.FC<FiveWhysModalProps> = ({
 
     onSend(message);
 
-    // Reset state
-    setShowDetailedInput(false);
-    setCustomProblem('');
-    setCurrentProblem('');
-    setWaitingForAiProblem(false);
-    setActiveTab('ai_topic');
-
+    // 送信後は完全にリセット
+    handleReset();
     onClose();
   };
 
@@ -129,13 +124,18 @@ export const FiveWhysModal: React.FC<FiveWhysModalProps> = ({
   };
 
   const handleClose = () => {
-    // 状態をリセット
+    // 状態はリセットせず、モーダルだけ閉じる
+    // ユーザーが途中まで入力した内容を保持
+    onClose();
+  };
+
+  const handleReset = () => {
+    // 完全にリセットしたい場合のヘルパー
     setShowDetailedInput(false);
     setCustomProblem('');
     setCurrentProblem('');
     setWaitingForAiProblem(false);
     setActiveTab('ai_topic');
-    onClose();
   };
 
   return (
@@ -152,12 +152,26 @@ export const FiveWhysModal: React.FC<FiveWhysModalProps> = ({
               <p className="text-sm text-slate-500">根本原因を深く掘り下げる</p>
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-          >
-            <X size={24} className="text-slate-400" />
-          </button>
+          <div className="flex items-center gap-2">
+            {showDetailedInput && (
+              <button
+                onClick={() => {
+                  if (confirm('入力内容をリセットして新規作成しますか？')) {
+                    handleReset();
+                  }
+                }}
+                className="px-3 py-2 text-sm font-bold text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+              >
+                新規作成
+              </button>
+            )}
+            <button
+              onClick={handleClose}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <X size={24} className="text-slate-400" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
