@@ -53,7 +53,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       config,
     });
 
-    const result = await chat.sendMessage({ message });
+    // sendMessage also expects string directly (consistent with streaming API)
+    const result = await chat.sendMessage(message);
 
     return res.status(200).json({
       text: result.text,
