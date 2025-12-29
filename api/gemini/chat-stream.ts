@@ -92,9 +92,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.end();
   } catch (error: unknown) {
     console.error('Gemini Chat Streaming API Error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     res.write(
-      `data: ${JSON.stringify({ error: 'Chat stream failed', message })}\n\n`
+      `data: ${JSON.stringify({ error: 'Chat stream failed', message: errorMessage })}\n\n`
     );
     res.end();
   }

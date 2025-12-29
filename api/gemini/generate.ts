@@ -58,10 +58,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error: unknown) {
     console.error('Gemini API Error:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return res.status(500).json({
       error: 'Failed to generate content',
-      message,
+      message: errorMessage,
     });
   }
 }
