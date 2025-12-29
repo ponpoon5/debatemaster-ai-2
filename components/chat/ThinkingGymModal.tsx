@@ -120,9 +120,8 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
         body = `【PEST分析】\n\n[Politics (政治)]\n${s.pest_p || '-'}\n\n[Economy (経済)]\n${s.pest_e || '-'}\n\n[Society (社会)]\n${s.pest_s || '-'}\n\n[Technology (技術)]\n${s.pest_t || '-'}`;
         break;
       case ThinkingFramework.FIVE_WHYS:
-        if (!s.why_problem) return;
-        body = `【なぜなぜ分析】\n\n[Problem] ${s.why_problem}\n\n[Why分析]\n1. Why? ${s.why_1 || ''}\n2. Why? ${s.why_2 || ''}\n3. Why? ${s.why_3 || ''}\n4. Why? ${s.why_4 || ''}\n5. Why? ${s.why_5 || ''}`;
-        break;
+        // 5 Whys は別の専用モーダルで処理
+        return;
       case ThinkingFramework.MECE:
         if (!s.mece_axis && !s.mece_1) return;
         body = `【MECE分解】\n\n[テーマ] ${customTopic || '(AI課題)'}\n[切り口・軸] ${s.mece_axis || '-'}\n\n[要素分解]\n・${s.mece_1 || ''}\n・${s.mece_2 || ''}\n・${s.mece_3 || ''}\n・${s.mece_4 || ''}`;
@@ -332,49 +331,7 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
                 </>
               )}
 
-              {framework === ThinkingFramework.FIVE_WHYS && (
-                <>
-                  {/* Problem入力のみ（AIが問題定義を生成） */}
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xs font-bold text-amber-800">問題文を入力</span>
-                      <span className="text-xs text-slate-500">（AIが問題定義と5つの観点を補完します）</span>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">
-                        Problem（問題文）<span className="text-rose-500">*必須</span>
-                      </label>
-                      <input
-                        placeholder="例：出荷ミスが増えている"
-                        className="w-full p-3 border border-amber-300 rounded-lg text-sm bg-white text-slate-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
-                        onChange={e => setGymState({ ...gymState, why_problem: e.target.value })}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Why分析は後でAIの指示後に入力 */}
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-indigo-600">Why分析（各段階で論理的に掘り下げる）</span>
-                    </div>
-                    <div className="space-y-3 pl-2 border-l-2 border-indigo-200">
-                      {[1, 2, 3, 4, 5].map(i => (
-                        <div key={i} className="flex gap-2 items-center">
-                          <span className="font-bold text-xs text-indigo-500 w-6 shrink-0 text-right">
-                          Why {i}
-                        </span>
-                        <input
-                          placeholder={`なぜ？ (原因 ${i})`}
-                          className="w-full p-2 bg-white border border-slate-200 rounded text-sm focus:border-indigo-400 text-slate-900"
-                          onChange={e => setGymState({ ...gymState, [`why_${i}`]: e.target.value })}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
+              {/* 5 Whys は別の専用モーダルで処理 */}
 
               {framework === ThinkingFramework.MECE ? (
                 <MECEInputForm

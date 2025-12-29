@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArgumentBuilderModal } from './ArgumentBuilderModal';
 import { ThinkingGymModal } from './ThinkingGymModal';
+import { FiveWhysModal } from './FiveWhysModal';
 import { SummaryModal } from './SummaryModal';
 import { WhiteboardModal } from './WhiteboardModal';
 import { HomeworkTask, ThinkingFramework } from '../../core/types';
@@ -20,6 +21,10 @@ interface ChatModalsProps {
   framework?: ThinkingFramework;
   gymInitialTab: 'caq' | 'comparison';
   lastAiMessage?: string; // MECE軸承認判定用
+
+  // FiveWhys
+  showFiveWhysModal: boolean;
+  setShowFiveWhysModal: (show: boolean) => void;
 
   // Summary
   summaryState: {
@@ -56,6 +61,8 @@ export const ChatModals: React.FC<ChatModalsProps> = React.memo(({
   framework,
   gymInitialTab,
   lastAiMessage,
+  showFiveWhysModal,
+  setShowFiveWhysModal,
   summaryState,
   boardState,
   showHomeworkModal,
@@ -99,6 +106,12 @@ export const ChatModals: React.FC<ChatModalsProps> = React.memo(({
         framework={framework}
         initialTab={gymInitialTab}
         lastAiMessage={lastAiMessage}
+      />
+
+      <FiveWhysModal
+        isOpen={showFiveWhysModal}
+        onClose={() => setShowFiveWhysModal(false)}
+        onSend={onSend}
       />
 
       <SummaryModal

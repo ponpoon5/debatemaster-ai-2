@@ -10,3 +10,4 @@ export * from './homework.types';
 export * from './error.types';
 export * from './burden.types';
 export * from './gemini-api.types';
+export * from './thinking-gym.types';
