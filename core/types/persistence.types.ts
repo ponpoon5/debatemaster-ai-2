@@ -1,8 +1,8 @@
 import { DebateSettings, DebateArchive } from './debate.types';
 import { HomeworkTask, WeaknessProfile } from './homework.types';
 
-export const CURRENT_SCHEMA_VERSION = 4;
-export const APP_VERSION = 'vv3.4.1';
+export const CURRENT_SCHEMA_VERSION = 5;
+export const APP_VERSION = 'vv5.0.2';
 export const STORAGE_KEY = 'debate_archives';
 
 export interface UserProfile {

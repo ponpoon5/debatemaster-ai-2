@@ -40,6 +40,7 @@ import { DebateTypeCards } from './setup/DebateTypeCards';
 import { ModeSettings } from './setup/ModeSettings';
 import { SystemInfoModal } from './setup/SystemInfoModal';
 import { SpecificationModal } from './setup/SpecificationModal';
+import { TokenStatisticsModal } from './setup/TokenStatisticsModal';
 
 interface SetupScreenProps {
   onStart: (settings: DebateSettings) => void;
@@ -91,6 +92,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
 
   const [showSystemInfo, setShowSystemInfo] = useState(false);
   const [showSpecification, setShowSpecification] = useState(false);
+  const [showTokenStatistics, setShowTokenStatistics] = useState(false);
   const [expandedHomework, setExpandedHomework] = useState(false);
 
   // Memoize pendingTasks to avoid re-filtering on every render
@@ -102,6 +104,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
   // Memoize modal toggle handlers
   const handleShowSystemInfo = useCallback(() => setShowSystemInfo(true), []);
   const handleShowSpecification = useCallback(() => setShowSpecification(true), []);
+  const handleShowTokenStatistics = useCallback(() => setShowTokenStatistics(true), []);
   const handleToggleHomework = useCallback(() => setExpandedHomework(prev => !prev), []);
 
   return (
@@ -113,6 +116,7 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
           onShowHistory={onShowHistory}
           onShowSystemInfo={handleShowSystemInfo}
           onShowSpecification={handleShowSpecification}
+          onShowStatistics={handleShowTokenStatistics}
         />
 
         <AppHeader activeMode={activeMode} />
@@ -582,6 +586,12 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({
       <SystemInfoModal isOpen={showSystemInfo} onClose={() => setShowSystemInfo(false)} />
 
       <SpecificationModal isOpen={showSpecification} onClose={() => setShowSpecification(false)} />
+
+      <TokenStatisticsModal
+        isOpen={showTokenStatistics}
+        onClose={() => setShowTokenStatistics(false)}
+        archives={archives}
+      />
     </div>
   );
 };

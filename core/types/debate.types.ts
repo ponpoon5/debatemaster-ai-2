@@ -59,6 +59,7 @@ export interface DebateArchive {
   topic: string;
   messages: Message[];
   feedback: FeedbackData;
+  tokenUsage?: import('./common.types').TokenUsage;
 }
 
 // --- Debate Phase Tracker ---

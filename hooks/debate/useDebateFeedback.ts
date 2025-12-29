@@ -30,6 +30,7 @@ interface UseDebateFeedbackParams {
   updateTokenUsage: (usage: TokenUsage) => void;
   addArchive: (archive: DebateArchive, settings: DebateSettings) => void;
   handleError: (error: unknown, context?: string) => void;
+  tokenUsage: TokenUsage;
 }
 
 export const useDebateFeedback = ({
@@ -41,6 +42,7 @@ export const useDebateFeedback = ({
   updateTokenUsage,
   addArchive,
   handleError,
+  tokenUsage,
 }: UseDebateFeedbackParams) => {
   const handleEndDebate = useCallback(async () => {
     if (!settings) return;
@@ -58,12 +60,16 @@ export const useDebateFeedback = ({
       updateTokenUsage(result.usage);
       setScreen('feedback');
 
+      // 現在のトークン使用量を取得してアーカイブに保存
+      const currentTokenUsage = { ...tokenUsage };
+
       const newArchive: DebateArchive = {
         id: Date.now().toString(),
         date: new Date().toISOString(),
         topic: settings.topic,
         messages: messages,
         feedback: result.data,
+        tokenUsage: currentTokenUsage,
       };
       addArchive(newArchive, settings);
     } catch (error: unknown) {
@@ -82,6 +88,7 @@ export const useDebateFeedback = ({
     updateTokenUsage,
     addArchive,
     handleError,
+    tokenUsage,
   ]);
 
   return {

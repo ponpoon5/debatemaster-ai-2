@@ -48,6 +48,12 @@ const sanitizeArchive = (archive: unknown): DebateArchive => {
       homeworkSuggestions: safeFeedback.homeworkSuggestions,
       trainingRecommendations: safeFeedback.trainingRecommendations,
     },
+    // V5 field
+    tokenUsage: (arch.tokenUsage as import('../../core/types').TokenUsage) || {
+      inputTokens: 0,
+      outputTokens: 0,
+      totalTokens: 0,
+    },
   };
 };
 
@@ -105,11 +111,42 @@ const migrateV3toV4: MigrationFn = (data: unknown) => {
   };
 };
 
+/**
+ * Migration 4 -> 5: Add tokenUsage to archives
+ */
+const migrateV4toV5: MigrationFn = (data: unknown) => {
+  console.log('Migration [4 -> 5]: Adding tokenUsage to archives');
+  const d = data as Record<string, unknown>;
+
+  const archives = ((d.archives as unknown[]) || []).map((archive: unknown) => {
+    const arch = archive as Record<string, unknown>;
+    // 既存アーカイブにデフォルトのtokenUsageを追加
+    if (!arch.tokenUsage) {
+      return {
+        ...arch,
+        tokenUsage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+        },
+      };
+    }
+    return arch;
+  });
+
+  return {
+    ...d,
+    schemaVersion: 5,
+    archives,
+  };
+};
+
 const MIGRATIONS: Record<number, MigrationFn> = {
   0: migrateLegacyToV1,
   1: migrateV1toV2,
   2: migrateV2toV3,
   3: migrateV3toV4,
+  4: migrateV4toV5,
 };
 
 export const migrateToLatest = (input: unknown): DebateMasterBackup => {

@@ -110,6 +110,7 @@ export const useDebateApp = () => {
     updateTokenUsage: batchedTokenUpdate,
     addArchive,
     handleError,
+    tokenUsage,
   });
 
   // --- Actions (delegated to specialized hooks) ---

@@ -1,6 +1,6 @@
 import React from 'react';
 import { TokenUsage } from '../../core/types';
-import { Calendar, Coins, DollarSign, Tag, Info, FileText } from 'lucide-react';
+import { Calendar, Coins, DollarSign, Tag, Info, FileText, BarChart3 } from 'lucide-react';
 
 interface TokenStatusProps {
   tokenUsage: TokenUsage;
@@ -8,6 +8,7 @@ interface TokenStatusProps {
   onShowHistory: () => void;
   onShowSystemInfo?: () => void;
   onShowSpecification?: () => void;
+  onShowStatistics?: () => void;
 }
 
 export const TokenStatus: React.FC<TokenStatusProps> = React.memo(({
@@ -16,6 +17,7 @@ export const TokenStatus: React.FC<TokenStatusProps> = React.memo(({
   onShowHistory,
   onShowSystemInfo,
   onShowSpecification,
+  onShowStatistics,
 }) => {
   const calculateEstimatedCost = (usage: TokenUsage) => {
     const inputCost = (usage.inputTokens / 1_000_000) * 0.075;
@@ -59,6 +61,15 @@ export const TokenStatus: React.FC<TokenStatusProps> = React.memo(({
         >
           <FileText size={14} className="text-slate-400" />
           <span className="hidden sm:inline">仕様書</span>
+        </button>
+
+        <button
+          onClick={onShowStatistics}
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-600 rounded-lg border border-slate-200 text-xs font-medium shadow-sm transition-all hover:bg-slate-50 hover:text-purple-600"
+          title="トークン使用量統計を表示"
+        >
+          <BarChart3 size={14} className="text-slate-400" />
+          <span className="hidden sm:inline">統計</span>
         </button>
       </div>
 
