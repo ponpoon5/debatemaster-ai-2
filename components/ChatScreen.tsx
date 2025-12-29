@@ -4,6 +4,7 @@ import {
   DebateSettings,
   TokenUsage,
   DebateMode,
+  ThinkingFramework,
   UtteranceStructureScore,
   HomeworkTask,
 } from '../core/types';
@@ -13,6 +14,7 @@ import { InputArea } from './chat/InputArea';
 import { SupportPanel } from './chat/SupportPanel';
 import { ArgumentBuilderModal } from './chat/ArgumentBuilderModal';
 import { ThinkingGymModal } from './chat/ThinkingGymModal';
+import { FiveWhysModal } from './chat/FiveWhysModal';
 import { SummaryModal } from './chat/SummaryModal';
 import { WhiteboardModal } from './chat/WhiteboardModal';
 import { DebatePhaseBar } from './chat/DebatePhaseBar';
@@ -83,6 +85,9 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
     isAutoPlaying,
     setIsAutoPlaying,
   } = chatState;
+
+  // 5 Whys専用モーダルの状態
+  const [showFiveWhysModal, setShowFiveWhysModal] = useState(false);
 
   const {
     adviceData,
@@ -351,8 +356,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
                         <button
                           onClick={() => {
-                            setGymInitialTab('custom_topic');
-                            setShowGymModal(true);
+                            // 5 Whysは専用モーダルを使用
+                            if (settings.thinkingFramework === ThinkingFramework.FIVE_WHYS) {
+                              setShowFiveWhysModal(true);
+                            } else {
+                              setGymInitialTab('custom_topic');
+                              setShowGymModal(true);
+                            }
                           }}
                           disabled={isSending}
                           className="flex items-center justify-center gap-3 w-full p-4 rounded-xl border-2 border-slate-100 hover:border-slate-400 hover:bg-slate-50 transition-all group text-left disabled:opacity-50"
@@ -452,8 +462,13 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
             setShowBuilder(!showBuilder);
           }}
           onToggleGym={() => {
-            setGymInitialTab('ai_topic');
-            setShowGymModal(!showGymModal);
+            // 5 Whysは専用モーダルを使用
+            if (settings.thinkingFramework === ThinkingFramework.FIVE_WHYS) {
+              setShowFiveWhysModal(!showFiveWhysModal);
+            } else {
+              setGymInitialTab('ai_topic');
+              setShowGymModal(!showGymModal);
+            }
           }}
           isThinkingGymMode={isThinkingGymMode}
           isStudyMode={isStudyMode}
@@ -481,6 +496,12 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         framework={settings.thinkingFramework}
         initialTab={gymInitialTab}
         lastAiMessage={lastAiMessage}
+      />
+
+      <FiveWhysModal
+        isOpen={showFiveWhysModal}
+        onClose={() => setShowFiveWhysModal(false)}
+        onSend={handleModalSend}
       />
 
       <SummaryModal
