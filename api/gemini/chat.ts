@@ -46,8 +46,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'GEMINI_API_KEY is not configured' });
     }
 
-    const generativeModel = genAI.getGenerativeModel(model);
-    const chat = generativeModel.startChat({
+    // chats APIを使用してチャットセッションを作成
+    const chat = genAI.chats.create({
+      model,
       history: history || [],
       config,
     });

@@ -51,8 +51,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
-    const generativeModel = genAI.getGenerativeModel(model);
-    const chat = generativeModel.startChat({
+    // chats APIを使用してチャットセッションを作成
+    const chat = genAI.chats.create({
+      model,
       history: history || [],
       config,
     });
