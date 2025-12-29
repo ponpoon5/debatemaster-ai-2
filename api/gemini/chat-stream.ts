@@ -61,8 +61,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       config,
     });
 
-    // sendMessageStream expects string directly (not object)
-    const stream = await chat.sendMessageStream(message);
+    // sendMessageStream expects { message: string } object format
+    const stream = await chat.sendMessageStream({ message });
 
     console.log('[Chat Stream] Stream initialized successfully');
     let chunkCount = 0;

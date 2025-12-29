@@ -114,7 +114,7 @@ export const useDebateSession = ({
             startPrompt = 'シナリオを開始してください。現状を説明し、会議を始めてください。';
 
           const response = await withTimeout<GenerateContentResponse>(
-            chat.sendMessage(startPrompt),
+            chat.sendMessage({ message: startPrompt }),
             CHAT_TIMEOUT_MS,
             '開始メッセージの受信がタイムアウトしました。再読み込みしてください。'
           );
@@ -190,7 +190,7 @@ export const useDebateSession = ({
             : 'あなたは否定側（CON）です。先攻として、立論（Opening Statement）を開始してください。';
 
         const response = await withTimeout<GenerateContentResponse>(
-          chatRef.current.sendMessage(prompt),
+          chatRef.current.sendMessage({ message: prompt }),
           CHAT_TIMEOUT_MS
         );
         const text = response.text ? cleanText(response.text) : '';

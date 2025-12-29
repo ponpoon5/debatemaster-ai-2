@@ -53,7 +53,7 @@ export const useDebateMessaging = ({
 
       try {
         // ストリーミングでメッセージを送信
-        const stream = await chatRef.current.sendMessageStream(text);
+        const stream = await chatRef.current.sendMessageStream({ message: text });
         let accumulatedText = '';
         let lastUsage: TokenUsage | undefined;
 
