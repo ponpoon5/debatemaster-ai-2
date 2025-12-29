@@ -16,19 +16,31 @@ export async function* processSSEStream(
   reader: ReadableStreamDefaultReader<Uint8Array>
 ): AsyncGenerator<GeminiStreamChunk> {
   const decoder = new TextDecoder();
+  let buffer = ''; // バッファリングして不完全なデータを処理
 
   try {
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        // ストリーム終了時にバッファに残っているデータを処理
+        if (buffer.trim()) {
+          console.warn('Stream ended with buffered data:', buffer);
+        }
+        break;
+      }
 
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
+      // 新しいチャンクをバッファに追加
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+
+      // 最後の行が不完全な可能性があるので保持
+      buffer = lines.pop() || '';
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
-          const data = line.slice(6); // Remove 'data: ' prefix
+          const data = line.slice(6).trim();
           if (data === '[DONE]') return;
+          if (!data) continue; // 空のデータ行をスキップ
 
           let parsed: GeminiStreamChunk;
           try {
@@ -48,6 +60,9 @@ export async function* processSSEStream(
         }
       }
     }
+  } catch (error) {
+    console.error('Stream processing error:', error);
+    throw error;
   } finally {
     reader.releaseLock();
   }
