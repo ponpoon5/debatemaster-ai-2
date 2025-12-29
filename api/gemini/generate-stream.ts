@@ -50,6 +50,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Nginxバッファリング無効化
+
+    console.log('[Stream] Starting stream for model:', model);
 
     const stream = await genAI.models.generateContentStream({
       model,
@@ -57,16 +60,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       config,
     });
 
+    console.log('[Stream] Stream initialized successfully');
+    let chunkCount = 0;
+
     // ストリーミング応答
     for await (const chunk of stream) {
+      chunkCount++;
       const chunkText = chunk.text;
       const usage = chunk.usageMetadata;
 
-      res.write(
-        `data: ${JSON.stringify({ text: chunkText, usageMetadata: usage })}\n\n`
-      );
+      try {
+        res.write(
+          `data: ${JSON.stringify({ text: chunkText, usageMetadata: usage })}\n\n`
+        );
+
+        if (chunkCount % 10 === 0) {
+          console.log(`[Stream] Sent ${chunkCount} chunks`);
+        }
+      } catch (writeError) {
+        console.error('[Stream] Write error:', writeError);
+        throw writeError;
+      }
     }
 
+    console.log(`[Stream] Completed successfully (${chunkCount} chunks)`);
     res.write('data: [DONE]\n\n');
     res.end();
   } catch (error: unknown) {
