@@ -121,7 +121,7 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
         break;
       case ThinkingFramework.FIVE_WHYS:
         if (!s.why_problem) return;
-        body = `【なぜなぜ分析】\n\n[問題] ${s.why_problem}\n\n1. Why? ${s.why_1 || ''}\n2. Why? ${s.why_2 || ''}\n3. Why? ${s.why_3 || ''}\n4. Why? ${s.why_4 || ''}\n5. Why? ${s.why_5 || ''}`;
+        body = `【なぜなぜ分析】\n\nA. 問題定義ブロック\n[Problem] ${s.why_problem}\n[Impact] ${s.why_impact || '-'}\n[Scope] ${s.why_scope || '-'}\n[Timeframe] ${s.why_timeframe || '-'}\n[Evidence] ${s.why_evidence || '-'}\n\nB. Why分析\n1. Why? ${s.why_1 || ''}\n2. Why? ${s.why_2 || ''}\n3. Why? ${s.why_3 || ''}\n4. Why? ${s.why_4 || ''}\n5. Why? ${s.why_5 || ''}`;
         break;
       case ThinkingFramework.MECE:
         if (!s.mece_axis && !s.mece_1) return;
@@ -334,20 +334,77 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
 
               {framework === ThinkingFramework.FIVE_WHYS && (
                 <>
-                  <div className="mb-4">
-                    <label className="text-xs font-bold text-slate-500 block mb-1">
-                      発生している問題 (Problem)
-                    </label>
-                    <input
-                      placeholder="例：工場のラインが停止した"
-                      className="w-full p-3 border border-slate-300 rounded-lg text-sm font-bold bg-white text-slate-900"
-                      onChange={e => setGymState({ ...gymState, why_problem: e.target.value })}
-                    />
+                  {/* A. 問題定義ブロック */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 space-y-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-bold text-amber-800">A. 問題定義ブロック</span>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">
+                        Problem（問題文）<span className="text-rose-500">*必須</span>
+                      </label>
+                      <input
+                        placeholder="例：出荷ミスが増えている"
+                        className="w-full p-2.5 border border-amber-300 rounded-lg text-sm bg-white text-slate-900 focus:border-amber-500 focus:ring-2 focus:ring-amber-100 outline-none"
+                        onChange={e => setGymState({ ...gymState, why_problem: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-600 block mb-1">
+                        Impact（影響/損失）<span className="text-slate-400">推奨</span>
+                      </label>
+                      <input
+                        placeholder="例：返品コスト増、顧客満足低下"
+                        className="w-full p-2.5 border border-slate-200 rounded-lg text-sm bg-white text-slate-900"
+                        onChange={e => setGymState({ ...gymState, why_impact: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-600 block mb-1">
+                        Scope（範囲）<span className="text-slate-400">推奨</span>
+                      </label>
+                      <input
+                        placeholder="例：営業部/受注工程/全商品カテゴリ"
+                        className="w-full p-2.5 border border-slate-200 rounded-lg text-sm bg-white text-slate-900"
+                        onChange={e => setGymState({ ...gymState, why_scope: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-600 block mb-1">
+                        Timeframe（期間）<span className="text-slate-400">推奨</span>
+                      </label>
+                      <input
+                        placeholder="例：先月から/週2-3回/直近10件中5件"
+                        className="w-full p-2.5 border border-slate-200 rounded-lg text-sm bg-white text-slate-900"
+                        onChange={e => setGymState({ ...gymState, why_timeframe: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-600 block mb-1">
+                        Evidence（観測事実）<span className="text-slate-400">推奨</span>
+                      </label>
+                      <input
+                        placeholder="例：エラーログ確認、顧客からの問い合わせ3件"
+                        className="w-full p-2.5 border border-slate-200 rounded-lg text-sm bg-white text-slate-900"
+                        onChange={e => setGymState({ ...gymState, why_evidence: e.target.value })}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-3 pl-2 border-l-2 border-slate-100">
-                    {[1, 2, 3, 4, 5].map(i => (
-                      <div key={i} className="flex gap-2 items-center">
-                        <span className="font-bold text-xs text-indigo-500 w-6 shrink-0 text-right">
+
+                  {/* B. Why分析ブロック */}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-indigo-600">B. Why分析（各段階で論理的に掘り下げる）</span>
+                    </div>
+                    <div className="space-y-3 pl-2 border-l-2 border-indigo-200">
+                      {[1, 2, 3, 4, 5].map(i => (
+                        <div key={i} className="flex gap-2 items-center">
+                          <span className="font-bold text-xs text-indigo-500 w-6 shrink-0 text-right">
                           Why {i}
                         </span>
                         <input
@@ -358,8 +415,9 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
                       </div>
                     ))}
                   </div>
-                </>
-              )}
+                </div>
+              </>
+            )}
 
               {framework === ThinkingFramework.MECE ? (
                 <MECEInputForm
