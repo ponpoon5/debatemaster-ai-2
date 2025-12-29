@@ -19,6 +19,7 @@ interface ChatModalsProps {
   setShowGymModal: (show: boolean) => void;
   framework?: ThinkingFramework;
   gymInitialTab: 'caq' | 'comparison';
+  lastAiMessage?: string; // MECE軸承認判定用
 
   // Summary
   summaryState: {
@@ -54,6 +55,7 @@ export const ChatModals: React.FC<ChatModalsProps> = React.memo(({
   setShowGymModal,
   framework,
   gymInitialTab,
+  lastAiMessage,
   summaryState,
   boardState,
   showHomeworkModal,
@@ -96,6 +98,7 @@ export const ChatModals: React.FC<ChatModalsProps> = React.memo(({
         onSend={onSend}
         framework={framework}
         initialTab={gymInitialTab}
+        lastAiMessage={lastAiMessage}
       />
 
       <SummaryModal

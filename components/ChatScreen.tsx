@@ -134,6 +134,14 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
 
   const { isStudyMode, isDrillMode, isFacilitationMode, isThinkingGymMode, isDemoMode, isStandardDebate, isStoryMode } = modeFlags;
 
+  // MECE: AI応答を取得（メモ化して変更を確実に検知）
+  const lastAiMessage = useMemo(() => {
+    const aiMessages = messages.filter(m => m.role === 'model');
+    const lastMsg = aiMessages[aiMessages.length - 1];
+    console.log('🔄 ChatScreen: lastAiMessage updated, length:', aiMessages.length, 'content:', lastMsg?.text?.substring(0, 100));
+    return lastMsg?.text;
+  }, [messages]);
+
   // Burden of Proof Tracking
   const { burdenAnalysis, showBurdenTracker, isAnalyzingBurden, toggleBurdenTracker } = useBurdenTracking(
     messages,
@@ -472,6 +480,7 @@ export const ChatScreen: React.FC<ChatScreenProps> = ({
         onSend={handleModalSend}
         framework={settings.thinkingFramework}
         initialTab={gymInitialTab}
+        lastAiMessage={lastAiMessage}
       />
 
       <SummaryModal

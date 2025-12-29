@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, BrainCircuit, Dices, PenTool, ArrowRight, RefreshCcw } from 'lucide-react';
 import { Button } from '../Button';
 import { ThinkingFramework } from '../../core/types';
+import { MECEInputForm } from '../thinking-gym/MECEInputForm';
+import { useMECEAnalyzer } from '../../hooks/thinking-gym/useMECEAnalyzer';
 
 interface ThinkingGymModalProps {
   isOpen: boolean;
@@ -9,6 +11,7 @@ interface ThinkingGymModalProps {
   onSend: (text: string) => void;
   framework?: ThinkingFramework;
   initialTab?: 'ai_topic' | 'custom_topic';
+  lastAiMessage?: string; // MECE軸承認判定用
 }
 
 type Tab = 'ai_topic' | 'custom_topic';
@@ -19,16 +22,82 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
   onSend,
   framework,
   initialTab,
+  lastAiMessage,
 }) => {
   const [activeTab, setActiveTab] = useState<Tab>(initialTab || 'ai_topic');
   const [gymState, setGymState] = useState<Record<string, string>>({});
   const [customTopic, setCustomTopic] = useState('');
   const [isRewrite, setIsRewrite] = useState(false);
 
+  // MECE-specific state
+  const [meceAxisApproved, setMeceAxisApproved] = useState(false);
+  const [meceCurrentAxis, setMeceCurrentAxis] = useState<string | null>(null);
+  const [waitingForAxisApproval, setWaitingForAxisApproval] = useState(false);
+  const [lastSubmittedAxis, setLastSubmittedAxis] = useState<string | null>(null);
+
+  const { analyzeAxisApproval } = useMECEAnalyzer();
+
+  // デバッグ: モーダルが再レンダリングされているか確認
+  console.log('🔄 ThinkingGymModal rendered - lastAiMessage:', lastAiMessage?.substring(0, 100), 'waitingForAxisApproval:', waitingForAxisApproval);
+
+  // MECE: AI応答を監視して軸承認を判定
+  useEffect(() => {
+    if (
+      framework === ThinkingFramework.MECE &&
+      waitingForAxisApproval &&
+      lastAiMessage &&
+      lastSubmittedAxis
+    ) {
+      console.log('🔍 MECE Axis Check - AI Response:', lastAiMessage.substring(0, 200));
+      const isApproved = analyzeAxisApproval(lastAiMessage);
+      console.log('🔍 MECE Axis Check - Is Approved:', isApproved);
+      if (isApproved) {
+        console.log('✅ MECE Axis Approved! Setting state...');
+        setMeceAxisApproved(true);
+        setMeceCurrentAxis(lastSubmittedAxis);
+        setWaitingForAxisApproval(false);
+      } else {
+        console.log('❌ MECE Axis Rejected');
+      }
+    }
+  }, [lastAiMessage, framework, waitingForAxisApproval, lastSubmittedAxis, analyzeAxisApproval]);
+
+  // MECE状態を明示的にリセットする関数
+  const resetMeceState = () => {
+    setMeceAxisApproved(false);
+    setMeceCurrentAxis(null);
+    setWaitingForAxisApproval(false);
+    setLastSubmittedAxis(null);
+    setCustomTopic('');
+    setIsRewrite(false);
+  };
+
   if (!isOpen) return null;
 
   const handleRequestAiTopic = () => {
+    resetMeceState(); // 新しいテーマを開始するのでリセット
     onSend('課題の自動作成をお願いします。');
+    onClose();
+  };
+
+  // MECE: Handle axis submission
+  const handleMeceAxisSubmit = (axis: string) => {
+    const message = `[MECE_AXIS_CHECK] 軸: ${axis}`;
+    console.log('📤 MECE Axis Submit:', axis);
+    setLastSubmittedAxis(axis);
+    setWaitingForAxisApproval(true);
+    console.log('🔄 Set waitingForAxisApproval = true');
+    onSend(message);
+    // モーダルは閉じない！AI応答を待つ
+  };
+
+  // MECE: Handle elements submission
+  const handleMeceElementsSubmit = (axis: string, elements: string[]) => {
+    const header = isRewrite ? '[GYM_REWRITE] (再提出)\n' : '';
+    const topicHeader = customTopic ? `【テーマ: ${customTopic}】\n` : '';
+    const body = `【MECE分解】\n\n[テーマ] ${customTopic || '(AI課題)'}\n[切り口・軸] ${axis}\n\n[要素分解]\n${elements.map(e => `・${e}`).join('\n')}`;
+    const finalMessage = header + topicHeader + body;
+    onSend(finalMessage);
     onClose();
   };
 
@@ -178,16 +247,18 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
                 <PenTool size={16} className="text-indigo-500" />
                 分析・回答入力
               </span>
-              <label className="flex items-center gap-2 text-xs font-bold text-indigo-600 cursor-pointer select-none bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors">
-                <input
-                  type="checkbox"
-                  checked={isRewrite}
-                  onChange={e => setIsRewrite(e.target.checked)}
-                  className="accent-indigo-600 rounded"
-                />
-                <RefreshCcw size={12} />
-                2回目(書き直し)として提出
-              </label>
+              {framework !== ThinkingFramework.MECE && (
+                <label className="flex items-center gap-2 text-xs font-bold text-indigo-600 cursor-pointer select-none bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={isRewrite}
+                    onChange={e => setIsRewrite(e.target.checked)}
+                    className="accent-indigo-600 rounded"
+                  />
+                  <RefreshCcw size={12} />
+                  2回目(書き直し)として提出
+                </label>
+              )}
             </div>
 
             <div className="space-y-4">
@@ -290,33 +361,17 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
                 </>
               )}
 
-              {framework === ThinkingFramework.MECE && (
-                <>
-                  <div>
-                    <label className="text-xs font-bold text-indigo-600 block mb-1">
-                      切り口・軸 (The Axis)
-                    </label>
-                    <input
-                      placeholder="例：年齢別、地域別、プロセス別..."
-                      className="w-full p-2.5 bg-white border border-indigo-200 rounded-lg text-sm font-medium text-slate-900"
-                      onChange={e => setGymState({ ...gymState, mece_axis: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-500 block">
-                      分解した要素 (Elements)
-                    </label>
-                    {[1, 2, 3, 4].map(i => (
-                      <input
-                        key={i}
-                        placeholder={`要素 ${i}`}
-                        className="w-full p-2.5 bg-white border border-slate-200 rounded-lg text-sm text-slate-900"
-                        onChange={e => setGymState({ ...gymState, [`mece_${i}`]: e.target.value })}
-                      />
-                    ))}
-                  </div>
-                </>
-              )}
+              {framework === ThinkingFramework.MECE ? (
+                <MECEInputForm
+                  onSubmitAxis={handleMeceAxisSubmit}
+                  onSubmitElements={handleMeceElementsSubmit}
+                  axisApproved={meceAxisApproved}
+                  currentAxis={meceCurrentAxis}
+                  isRewrite={isRewrite}
+                  onRewriteChange={setIsRewrite}
+                  onResetAxis={resetMeceState}
+                />
+              ) : null}
 
               {framework === ThinkingFramework.LOGIC_TREE && (
                 <>
@@ -377,15 +432,17 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
               )}
             </div>
 
-            <div className="mt-6">
-              <Button
-                onClick={handleSendAnalysis}
-                fullWidth
-                className="bg-indigo-600 text-white hover:bg-indigo-700 h-12 text-lg shadow-lg"
-              >
-                {isRewrite ? '修正案を提出 (Challenge)' : '分析結果を提出'}
-              </Button>
-            </div>
+            {framework !== ThinkingFramework.MECE && (
+              <div className="mt-6">
+                <Button
+                  onClick={handleSendAnalysis}
+                  fullWidth
+                  className="bg-indigo-600 text-white hover:bg-indigo-700 h-12 text-lg shadow-lg"
+                >
+                  {isRewrite ? '修正案を提出 (Challenge)' : '分析結果を提出'}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
