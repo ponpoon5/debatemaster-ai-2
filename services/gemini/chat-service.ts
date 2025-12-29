@@ -27,7 +27,7 @@ export const createDebateChat = (
   const config: {
     systemInstruction: string;
     responseMimeType?: string;
-    thinkingConfig?: { mode: string };
+    thinkingConfig?: { thinkingMode?: string };
   } = {
     systemInstruction: getSystemInstruction(
       topic,
@@ -41,7 +41,7 @@ export const createDebateChat = (
       storyScenario
     ),
     // 思考プロセスを完全に無効化
-    thinkingConfig: { mode: 'DISABLED' },
+    thinkingConfig: { thinkingMode: 'DISABLED' },
   };
 
   // For Demo mode, suggest JSON mimetype to ensure structured output
