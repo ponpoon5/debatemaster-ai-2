@@ -293,7 +293,7 @@ class AIClientWrapper {
                   if (fullText && !accumulatedHistory.some(h => h.role === 'model' && h.parts[0].text === fullText)) {
                     accumulatedHistory = [
                       ...accumulatedHistory,
-                      { role: 'user', parts: [{ text: message.message }] },
+                      { role: 'user', parts: [{ text: params.message }] },
                       { role: 'model', parts: [{ text: fullText }] },
                     ];
                   }
