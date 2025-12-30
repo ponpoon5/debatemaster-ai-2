@@ -58,8 +58,6 @@ export const useSWOTAnalyzer = () => {
    */
   const extractSWOTElements = (userInput: string): ApprovedSWOT | null => {
     try {
-      console.log('🔍 Extracting SWOT from input:', userInput);
-
       const swot: ApprovedSWOT = {
         strengths: [],
         weaknesses: [],
@@ -73,7 +71,6 @@ export const useSWOTAnalyzer = () => {
       );
       if (strengthsMatch) {
         const content = strengthsMatch[1].trim();
-        console.log('💪 Strengths content:', content);
         swot.strengths = content
           .split(/\n/)
           .map((s) => s.trim())
@@ -86,7 +83,6 @@ export const useSWOTAnalyzer = () => {
       );
       if (weaknessesMatch) {
         const content = weaknessesMatch[1].trim();
-        console.log('⚠️ Weaknesses content:', content);
         swot.weaknesses = content
           .split(/\n/)
           .map((s) => s.trim())
@@ -99,7 +95,6 @@ export const useSWOTAnalyzer = () => {
       );
       if (opportunitiesMatch) {
         const content = opportunitiesMatch[1].trim();
-        console.log('🌟 Opportunities content:', content);
         swot.opportunities = content
           .split(/\n/)
           .map((s) => s.trim())
@@ -112,7 +107,6 @@ export const useSWOTAnalyzer = () => {
       );
       if (threatsMatch) {
         const content = threatsMatch[1].trim();
-        console.log('⚡ Threats content:', content);
         swot.threats = content
           .split(/\n/)
           .map((s) => s.trim())
@@ -120,7 +114,6 @@ export const useSWOTAnalyzer = () => {
       }
 
       // 最低限の要素があるかチェック
-      console.log('📋 Final SWOT:', swot);
       if (
         swot.strengths.length > 0 ||
         swot.weaknesses.length > 0 ||
@@ -130,10 +123,8 @@ export const useSWOTAnalyzer = () => {
         return swot;
       }
 
-      console.warn('⚠️ No SWOT elements extracted');
       return null;
     } catch (error) {
-      console.error('SWOT extraction error:', error);
       return null;
     }
   };

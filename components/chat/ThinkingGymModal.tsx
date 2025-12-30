@@ -70,15 +70,6 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
 
   // SWOT: AI応答を監視してSWOT承認を判定
   useEffect(() => {
-    console.log('🔍 SWOT Approval Check:', {
-      framework,
-      hasLastAiMessage: !!lastAiMessage,
-      lastAiMessagePreview: lastAiMessage?.substring(0, 100),
-      hasLastUserSWOTInput: !!lastUserSWOTInput,
-      lastUserSWOTInputPreview: lastUserSWOTInput?.substring(0, 100),
-      swotApproved,
-    });
-
     if (
       framework === ThinkingFramework.SWOT &&
       lastAiMessage &&
@@ -86,20 +77,15 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
       !swotApproved
     ) {
       const isApproved = analyzeSWOTApproval(lastAiMessage);
-      console.log('✅ SWOT Approval Result:', isApproved);
 
       if (isApproved) {
         const extractedSWOT = extractSWOTElements(lastUserSWOTInput);
-        console.log('📊 Extracted SWOT:', extractedSWOT);
 
         if (extractedSWOT) {
           setSWOTApproved(true);
           setApprovedSWOT(extractedSWOT);
           setShowCrossSWOTModal(true);
-          console.log('🎉 CrossSWOT Modal should now open!');
           // ThinkingGymModalは開いたままにして、ボタンを表示する
-        } else {
-          console.warn('⚠️ Failed to extract SWOT elements');
         }
       }
     }
@@ -179,7 +165,6 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
         if (!s.swot_s && !s.swot_w && !s.swot_o && !s.swot_t) return;
         body = `【SWOT分析】\n\n[Strengths (強み)]\n${s.swot_s || '-'}\n\n[Weaknesses (弱み)]\n${s.swot_w || '-'}\n\n[Opportunities (機会)]\n${s.swot_o || '-'}\n\n[Threats (脅威)]\n${s.swot_t || '-'}`;
         // SWOT入力を保存（承認検出のため）
-        console.log('💾 Saving SWOT input:', body);
         setLastUserSWOTInput(body);
         break;
       case ThinkingFramework.PEST:
