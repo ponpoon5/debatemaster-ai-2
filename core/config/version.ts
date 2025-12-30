@@ -5,13 +5,13 @@
 
 export const APP_VERSION = {
   major: 5,
-  minor: 1,
+  minor: 2,
   patch: 0,
-  full: '5.1.0',
+  full: '5.2.0',
   name: 'DebateMaster AI',
-  displayName: 'DebateMaster AI vv5.1.0',
+  displayName: 'DebateMaster AI vv5.2.0',
   releaseDate: '2025-12-30',
-  codename: 'Documentation Consolidation',
+  codename: 'Cross-SWOT Analysis',
 } as const;
 
 export const getVersionString = () => {
