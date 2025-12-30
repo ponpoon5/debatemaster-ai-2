@@ -3,7 +3,9 @@ import { X, BrainCircuit, Dices, PenTool, ArrowRight, RefreshCcw } from 'lucide-
 import { Button } from '../Button';
 import { ThinkingFramework } from '../../core/types';
 import { MECEInputForm } from '../thinking-gym/MECEInputForm';
+import { CrossSWOTModal } from '../thinking-gym/CrossSWOTModal';
 import { useMECEAnalyzer } from '../../hooks/thinking-gym/useMECEAnalyzer';
+import { useSWOTAnalyzer } from '../../hooks/thinking-gym/useSWOTAnalyzer';
 
 interface ThinkingGymModalProps {
   isOpen: boolean;
@@ -35,7 +37,19 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
   const [waitingForAxisApproval, setWaitingForAxisApproval] = useState(false);
   const [lastSubmittedAxis, setLastSubmittedAxis] = useState<string | null>(null);
 
+  // SWOT-specific state
+  const [swotApproved, setSWOTApproved] = useState(false);
+  const [approvedSWOT, setApprovedSWOT] = useState<{
+    strengths: string[];
+    weaknesses: string[];
+    opportunities: string[];
+    threats: string[];
+  } | null>(null);
+  const [showCrossSWOTModal, setShowCrossSWOTModal] = useState(false);
+  const [lastUserSWOTInput, setLastUserSWOTInput] = useState('');
+
   const { analyzeAxisApproval } = useMECEAnalyzer();
+  const { analyzeSWOTApproval, extractSWOTElements, formatCrossSWOTStrategies } = useSWOTAnalyzer();
 
   // MECE: AI応答を監視して軸承認を判定
   useEffect(() => {
@@ -54,6 +68,43 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
     }
   }, [lastAiMessage, framework, waitingForAxisApproval, lastSubmittedAxis, analyzeAxisApproval]);
 
+  // SWOT: AI応答を監視してSWOT承認を判定
+  useEffect(() => {
+    console.log('🔍 SWOT Approval Check:', {
+      framework,
+      hasLastAiMessage: !!lastAiMessage,
+      lastAiMessagePreview: lastAiMessage?.substring(0, 100),
+      hasLastUserSWOTInput: !!lastUserSWOTInput,
+      lastUserSWOTInputPreview: lastUserSWOTInput?.substring(0, 100),
+      swotApproved,
+    });
+
+    if (
+      framework === ThinkingFramework.SWOT &&
+      lastAiMessage &&
+      lastUserSWOTInput &&
+      !swotApproved
+    ) {
+      const isApproved = analyzeSWOTApproval(lastAiMessage);
+      console.log('✅ SWOT Approval Result:', isApproved);
+
+      if (isApproved) {
+        const extractedSWOT = extractSWOTElements(lastUserSWOTInput);
+        console.log('📊 Extracted SWOT:', extractedSWOT);
+
+        if (extractedSWOT) {
+          setSWOTApproved(true);
+          setApprovedSWOT(extractedSWOT);
+          setShowCrossSWOTModal(true);
+          console.log('🎉 CrossSWOT Modal should now open!');
+          // ThinkingGymModalは開いたままにして、ボタンを表示する
+        } else {
+          console.warn('⚠️ Failed to extract SWOT elements');
+        }
+      }
+    }
+  }, [lastAiMessage, framework, lastUserSWOTInput, swotApproved, analyzeSWOTApproval, extractSWOTElements]);
+
   // MECE状態を明示的にリセットする関数
   const resetMeceState = () => {
     setMeceAxisApproved(false);
@@ -64,10 +115,21 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
     setIsRewrite(false);
   };
 
+  // SWOT状態を明示的にリセットする関数
+  const resetSWOTState = () => {
+    setSWOTApproved(false);
+    setApprovedSWOT(null);
+    setShowCrossSWOTModal(false);
+    setLastUserSWOTInput('');
+    setCustomTopic('');
+    setIsRewrite(false);
+  };
+
   if (!isOpen) return null;
 
   const handleRequestAiTopic = () => {
     resetMeceState(); // 新しいテーマを開始するのでリセット
+    resetSWOTState(); // SWOT状態もリセット
     onSend('課題の自動作成をお願いします。');
     onClose();
   };
@@ -91,6 +153,18 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
     onClose();
   };
 
+  // CrossSWOT戦略を送信
+  const handleCrossSWOTSubmit = (strategies: {
+    so: { name: string; rationale: string; action: string; expectedOutcome: string };
+    wo: { name: string; rationale: string; action: string; expectedOutcome: string };
+    st: { name: string; rationale: string; action: string; expectedOutcome: string };
+    wt: { name: string; rationale: string; action: string; expectedOutcome: string };
+  }) => {
+    const formattedStrategies = formatCrossSWOTStrategies(strategies);
+    onSend(formattedStrategies);
+    setShowCrossSWOTModal(false);
+  };
+
   const handleSendAnalysis = () => {
     let finalMessage = '';
     const s = gymState;
@@ -104,6 +178,9 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
       case ThinkingFramework.SWOT:
         if (!s.swot_s && !s.swot_w && !s.swot_o && !s.swot_t) return;
         body = `【SWOT分析】\n\n[Strengths (強み)]\n${s.swot_s || '-'}\n\n[Weaknesses (弱み)]\n${s.swot_w || '-'}\n\n[Opportunities (機会)]\n${s.swot_o || '-'}\n\n[Threats (脅威)]\n${s.swot_t || '-'}`;
+        // SWOT入力を保存（承認検出のため）
+        console.log('💾 Saving SWOT input:', body);
+        setLastUserSWOTInput(body);
         break;
       case ThinkingFramework.PEST:
         if (!s.pest_p && !s.pest_e && !s.pest_s && !s.pest_t) return;
@@ -135,7 +212,11 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
       setGymState({});
       setCustomTopic('');
     }
-    onClose();
+
+    // SWOT の場合は承認待ちのためモーダルを閉じない
+    if (framework !== ThinkingFramework.SWOT) {
+      onClose();
+    }
   };
 
   const getFrameworkLabel = () => {
@@ -293,6 +374,22 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
                       onChange={e => setGymState({ ...gymState, swot_t: e.target.value })}
                     />
                   </div>
+
+                  {/* SWOT承認後のクロスSWOT戦略ボタン */}
+                  {swotApproved && approvedSWOT && (
+                    <div className="mt-4 p-4 bg-green-50 border-2 border-green-300 rounded-lg">
+                      <p className="text-sm font-bold text-green-800 mb-2">
+                        ✅ SWOT分析が承認されました！
+                      </p>
+                      <Button
+                        onClick={() => setShowCrossSWOTModal(true)}
+                        fullWidth
+                        className="bg-green-600 text-white hover:bg-green-700"
+                      >
+                        クロスSWOT戦略を立案する
+                      </Button>
+                    </div>
+                  )}
                 </>
               )}
 
@@ -408,6 +505,19 @@ export const ThinkingGymModal: React.FC<ThinkingGymModalProps> = ({
           </div>
         </div>
       </div>
+
+      {/* CrossSWOT Modal */}
+      {showCrossSWOTModal && (
+        <CrossSWOTModal
+          isOpen={showCrossSWOTModal}
+          onClose={() => {
+            setShowCrossSWOTModal(false);
+            // 再度開けるように、ここではswotApprovedをリセットしない
+          }}
+          onSubmit={handleCrossSWOTSubmit}
+          approvedSWOT={approvedSWOT}
+        />
+      )}
     </div>
   );
 };
