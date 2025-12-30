@@ -53,7 +53,10 @@
       "Bash(dir:*)",
       "Bash(git tag:*)",
       "Bash(git restore:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(timeout /t 5)",
+      "Bash(del:*)",
+      "Bash(git rm:*)"
     ]
   }
 }
